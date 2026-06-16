@@ -46,12 +46,12 @@ est abonné, dans l'ordre chronologique. Il sera par ailleurs possible de commen
 
 Présentez les **fonctionnalités livrées** (liste synthétique), en précisant leur état (terminée / en cours / à venir).
 
-| Fonctionnalités                      | Description                                         | Statut |
-|:-------------------------------------|:----------------------------------------------------|:-------|
-| **Création d'un compte utilisateur** | Formulaire et validation d'inscription (Zod)        |        |
-| **Publication d'un article**         | Gestion CRUD via Server Actions                     |        |
-| **Commentaires**                     | Association article/commentaires (Prisma Relations) |        |
-| **Authentification**                 | Sécurisation (Auth.js / NextAuth)                   |        |
+| Fonctionnalités                      | Description                                         | Statut   |
+|:-------------------------------------|:----------------------------------------------------|:---------|
+| **Création d'un compte utilisateur** | Formulaire et validation d'inscription              | En cours |
+| **Authentification**                 | Sécurisation                                        |          |
+| **Publication d'un article**         | Gestion CRUD via Server Actions                     |          |
+| **Commentaires**                     | Association article/commentaires (Prisma Relations) |          |
 
 ---
 
@@ -137,7 +137,6 @@ Action aujourd'hui, Route Handler demain) et testable en isolation.
 | **Zod**            | Validation                       | https://zod.dev/                                                                                                  | Validation des données                                                                                     | Simplicité et lisibilité de la syntaxe, une source de vérité (cf. z.infer)                           |
 | **NextAuth.js**    | Bibliothèque d'authentification  | https://next-auth.js.org/getting-started/introduction                                                             | Sécurisation de l'application                                                                              | Support d'un vaste choix de méthodes d'authentification (future proof)                               |
 | **Tailwind**       | Framework CSS                    | https://tailwindcss.com/docs                                                                                      | Styliser rapidement                                                                                        | Gestion du responsive, styles et composants regroupés via classes utilitaires                        |
-| **shadcn/ui**      | Composants graphiques            | https://ui.shadcn.com/docs/                                                                                       | Composants graphiques prêts à l'emploi                                                                     | Visuellement compatible avec les maquettes du projet, design moderne, personnalisation étendue       |
 | **GitHub**         | Collaboration                    | https://www.github.com                                                                                            | Versionning du code, collaboration, CI                                                                     | Gratuit, standard de l'industrie                                                                     |
 
 <a id="api-donnees"></a>

@@ -11,8 +11,8 @@ model User {
   email         String         @unique
   username      String         @unique
   password      String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
   articles      Article[]
   comments      Comment[]
   subscriptions Subscription[]
@@ -23,8 +23,8 @@ model User {
 model Topic {
   id            Int            @id @default(autoincrement())
   name          String         @unique
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
   articles      Article[]
   subscriptions Subscription[]
 
@@ -36,7 +36,7 @@ model Subscription {
   user      User     @relation(fields: [userId], references: [id])
   topicId   Int      @map("topic_id")
   topic     Topic    @relation(fields: [topicId], references: [id])
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@id([userId, topicId])
   @@map("subscriptions")
@@ -50,8 +50,8 @@ model Article {
   topic     Topic     @relation(fields: [topicId], references: [id])
   title     String
   content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   comments  Comment[]
 
   @@map("articles")
@@ -64,8 +64,8 @@ model Comment {
   articleId Int      @map("article_id")
   article   Article  @relation(fields: [articleId], references: [id])
   content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("comments")
 }
