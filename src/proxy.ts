@@ -4,7 +4,7 @@ import type {NextRequest} from "next/server";
 
 // Redirige les utilisateurs déjà connectés hors des pages publiques
 // (accueil, login, register) vers leur fil d'actualité.
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
     const token = await getToken({req, secret: process.env.NEXTAUTH_SECRET});
 
     if (token) {
