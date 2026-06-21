@@ -14,7 +14,7 @@ class UsersService {
             throw new AppError(409, "Cette adresse email existe déjà");
         }
         if (await this.findByUsername(user.username) !== null) {
-            throw new AppError(40, "Ce nom d'utilisateur existe déjà");
+            throw new AppError(409, "Ce nom d'utilisateur existe déjà");
         }
 
         return this.repo.insert({...user, password: this.hashPassword(user.password)});
