@@ -191,6 +191,7 @@ erDiagram
     TOPIC {
         int id PK
         string name UK
+        string description
         datetime createdAt
         datetime updatedAt
     }

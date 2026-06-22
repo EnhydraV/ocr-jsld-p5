@@ -1,4 +1,4 @@
-import {AuthOptions} from "next-auth";
+import {AuthOptions, getServerSession} from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import {usersService} from "@/src/lib/users/users.service";
@@ -55,3 +55,9 @@ export const authOptions : AuthOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET,
 };
+
+export async function getCurrentUserId(): Promise<number> {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) throw new AppError(401, "Authentication required");
+    return Number(session.user.id);
+}
