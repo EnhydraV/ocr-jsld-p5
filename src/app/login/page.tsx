@@ -1,13 +1,26 @@
 "use client";
 import {signIn} from "next-auth/react";
-import {useState} from "react";
-import {useRouter} from "next/navigation";
+import {Suspense, useState} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
 import HeaderLogin from "@/src/app/components/HeaderLogin";
 import Button from "@/src/app/components/ui/Button";
 import Input from "@/src/app/components/ui/Input";
 
+// `useSearchParams` impose un périmètre Suspense (sinon Next bascule toute la
+// page en rendu client). On isole donc le formulaire ici.
 export default function Login() {
+    return (
+        <Suspense>
+            <LoginForm/>
+        </Suspense>
+    );
+}
+
+function LoginForm() {
     const router = useRouter();
+    // `?registered=1` posé par la Server Action d'inscription : confirme la
+    // création du compte sur l'écran de connexion.
+    const justRegistered = useSearchParams().get("registered") === "1";
     // Champ unique « E-mail ou nom d'utilisateur » (cf. maquette). NextAuth
     // attend la clé `email`, que `authorize` résout via findByEmailOrUsername.
     const [identifier, setIdentifier] = useState("");
@@ -43,17 +56,27 @@ export default function Login() {
                 <div className="w-full space-y-6">
                     <h1 className="text-center text-2xl font-bold text-foreground">Se connecter</h1>
 
-                    {error && (
-                        <p
-                            role="alert"
-                            aria-live="polite"
-                            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
-                        >
-                            {error}
-                        </p>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-4 max-w-110 mx-auto">
+                        {justRegistered && !error && (
+                            <p
+                                role="status"
+                                aria-live="polite"
+                                className="rounded-lg bg-emerald-50 p-4 text-sm text-emerald-700"
+                            >
+                                Compte créé. Tu peux maintenant te connecter.
+                            </p>
+                        )}
+
+                        {error && (
+                            <p
+                                role="alert"
+                                aria-live="polite"
+                                className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive"
+                            >
+                                {error}
+                            </p>
+                        )}
+
                         <div className="space-y-1.5">
                             <label htmlFor="identifier" className="text-sm font-medium text-foreground">
                                 E-mail ou nom d&apos;utilisateur

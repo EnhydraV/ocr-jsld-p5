@@ -46,12 +46,17 @@ est abonné, dans l'ordre chronologique. Il sera par ailleurs possible de commen
 
 Présentez les **fonctionnalités livrées** (liste synthétique), en précisant leur état (terminée / en cours / à venir).
 
-| Fonctionnalités                      | Description                                         | Statut   |
-|:-------------------------------------|:----------------------------------------------------|:---------|
-| **Création d'un compte utilisateur** | Formulaire et validation d'inscription              | En cours |
-| **Authentification**                 | Sécurisation                                        |          |
-| **Publication d'un article**         | Gestion CRUD via Server Actions                     |          |
-| **Commentaires**                     | Association article/commentaires (Prisma Relations) |          |
+| Fonctionnalités                         | Description                                                                                  | Statut   |
+|:----------------------------------------|:---------------------------------------------------------------------------------------------|:---------|
+| **Création d'un compte utilisateur**    | Formulaire et validation d'inscription                                                       | Terminée |
+| **Authentification**                    | Authentification sécurisée par mot de passe, hash du mot de passe, pose du cookie de session | Terminée |
+| **Déconnexion**                         | Suppression du cookie                                                                        | Terminée |
+| **Liste des thèmes**                    |                                                                                              |          |
+| **Abonnement/Désabonnement à un thème** |                                                                                              |          |
+| **Rédiger un article**                  |                                                                                              |          |
+| **Lire le fil d'actualités**            |                                                                                              |          |
+| **Lire un article**                     |                                                                                              |          |
+| **Ecrire un commentaire**               | Association article/commentaires (Prisma Relations)                                          |          |
 
 ---
 
