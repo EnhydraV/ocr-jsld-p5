@@ -8,9 +8,10 @@ import * as z from "zod";
 export const RegisterSchema = z.object({
     username: z
         .string()
+        .trim()
         .min(3, "Le nom d'utilisateur doit contenir au moins 3 caractères.")
         .max(20, "Le nom d'utilisateur ne doit pas dépasser 20 caractères."),
-    email: z.string().email("L'adresse email n'est pas valide."),
+    email: z.string().trim().email("L'adresse email n'est pas valide."),
     password: z
         .string()
         .min(8, "Le mot de passe doit contenir au moins 8 caractères.")
@@ -25,7 +26,7 @@ export const RegisterSchema = z.object({
 
 /** Schéma de validation de la connexion (identifiant + mot de passe). */
 export const LoginSchema = z.object({
-    usernameoremail: z.string(),
+    usernameoremail: z.string().trim(),
     password: z.string()
 })
 

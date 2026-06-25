@@ -52,9 +52,8 @@ const users = [
 
 const DEMO_PASSWORD = "Password1!";
 
-// Articles de démonstration, rédigés à la main (3 paragraphes chacun). `topic`
-// doit correspondre exactement au `name` d'un thème ci-dessus : le script résout
-// l'id du thème à partir de cette chaîne. L'auteur est attribué plus bas.
+// Articles de démonstration (3 paragraphes chacun). `topic`
+// L'auteur est attribué plus bas.
 const articles: { topic: string; title: string; content: string }[] = [
     // --- JavaScript ---
     {
