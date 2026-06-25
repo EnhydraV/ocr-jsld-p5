@@ -1,5 +1,5 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.5**\
+Version : **0.0.6**\
 Date : **25/06/2026**
 
 # Documentation et rapport du projet MDD
@@ -46,17 +46,19 @@ est abonné, dans l'ordre chronologique. Il sera par ailleurs possible de commen
 
 Présentez les **fonctionnalités livrées** (liste synthétique), en précisant leur état (terminée / en cours / à venir).
 
-| Fonctionnalités                         | Description                                                                                  | Statut   |
-|:----------------------------------------|:---------------------------------------------------------------------------------------------|:---------|
-| **Création d'un compte utilisateur**    | Formulaire et validation d'inscription                                                       | Terminée |
-| **Authentification**                    | Authentification sécurisée par mot de passe, hash du mot de passe, pose du cookie de session | Terminée |
-| **Déconnexion**                         | Suppression du cookie                                                                        | Terminée |
-| **Liste des thèmes**                    |                                                                                              |          |
-| **Abonnement/Désabonnement à un thème** |                                                                                              |          |
-| **Rédiger un article**                  |                                                                                              |          |
-| **Lire le fil d'actualités**            |                                                                                              |          |
-| **Lire un article**                     |                                                                                              |          |
-| **Ecrire un commentaire**               | Association article/commentaires (Prisma Relations)                                          |          |
+| Fonctionnalités                            | Description                                                                                                                                        | Statut   |
+|:-------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------|:---------|
+| **Création d'un compte utilisateur**       | Formulaire et validation d'inscription                                                                                                             | Terminée |
+| **Authentification**                       | Authentification sécurisée par mot de passe, hash du mot de passe, pose du cookie de session                                                       | Terminée |
+| **Déconnexion**                            | Suppression du cookie                                                                                                                              | Terminée |
+| **Consulter son profil utilisateur**       | Afficher les informations associées à son compte et ses abonnements                                                                                | Terminée |
+| **Modifier ses informations de connexion** | Modifier email, nom d'utilisateur et mot de passe                                                                                                  | Terminée |
+| **Liste des thèmes**                       | Afficher la liste des thèmes et leur status "abonné" pour l'utilisateur                                                                            | Terminée |
+| **Abonnement/Désabonnement à un thème**    | Dans le profil utilisateur, se désabonner d'un thème. Dans la liste des thème s'abonner/se désabonner des thème                                    | Terminée |
+| **Rédiger un article**                     | Ecrire un article associé à un thème                                                                                                               |          |
+| **Lire le fil d'actualités**               | Lister les articles associés aux thèmes auxquels l'utilisateur a souscrit. Ordonner les articles par date de publication (ascendant ou descendant) | Terminée |
+| **Lire un article**                        | Consulter un article et ses commentaires.                                                                                                          |          |
+| **Ecrire un commentaire**                  | Ecrire un commentaire associé à un article                                                                                                         |          |
 
 ---
 
@@ -162,27 +164,27 @@ La logique serveur suit l'idiome de l'App Router, qui sépare nettement écritur
 
 **Server Actions (mutations)**
 
-| Server Action      | Opération                       | Entrée                                          | Retour / effet                                                                            |
-|:-------------------|:--------------------------------|:------------------------------------------------|:------------------------------------------------------------------------------------------|
-| `registerAction`   | Inscription                     | FormData (username, email, password)            | `redirect` `/login?registered=1` ; sinon `RegisterState` (message d'erreur)               |
-| `profileAction`    | Mise à jour du profil connecté  | FormData (username, email, password optionnel)  | `ProfileState` `{success, values}` + `revalidatePath('/profile')` ; sinon état d'erreur   |
-| `postAction`       | Publication d'un article        | FormData (topicId, title, content)              | `redirect` `/article/{id}?created=1` ; sinon `PostState` (erreur)                          |
-| `commentAction`    | Ajout d'un commentaire          | `articleId` (lié via `.bind()`) + FormData (content) | `redirect` `/article/{id}?comment=1` ; sinon `CommentState` (erreur)                  |
-| `subscribeAction`  | Abonnement à un thème           | `topicId` (lié via `.bind()`)                   | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                                 |
-| `unsubscribeAction`| Désabonnement d'un thème        | `topicId` (lié via `.bind()`)                   | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                                 |
+| Server Action       | Opération                      | Entrée                                               | Retour / effet                                                                          |
+|:--------------------|:-------------------------------|:-----------------------------------------------------|:----------------------------------------------------------------------------------------|
+| `registerAction`    | Inscription                    | FormData (username, email, password)                 | `redirect` `/login?registered=1` ; sinon `RegisterState` (message d'erreur)             |
+| `profileAction`     | Mise à jour du profil connecté | FormData (username, email, password optionnel)       | `ProfileState` `{success, values}` + `revalidatePath('/profile')` ; sinon état d'erreur |
+| `postAction`        | Publication d'un article       | FormData (topicId, title, content)                   | `redirect` `/article/{id}?created=1` ; sinon `PostState` (erreur)                       |
+| `commentAction`     | Ajout d'un commentaire         | `articleId` (lié via `.bind()`) + FormData (content) | `redirect` `/article/{id}?comment=1` ; sinon `CommentState` (erreur)                    |
+| `subscribeAction`   | Abonnement à un thème          | `topicId` (lié via `.bind()`)                        | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                              |
+| `unsubscribeAction` | Désabonnement d'un thème       | `topicId` (lié via `.bind()`)                        | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                              |
 
 Les erreurs *attendues* (Zod, `AppError`) sont traduites en message par le helper commun `toActionError`
 (`lib/actionError.ts`).
 
 **Lectures (Server Components → couche service)**
 
-| Méthode service                             | Opération                                  | Page / usage                              |
-|:--------------------------------------------|:-------------------------------------------|:------------------------------------------|
-| `articlesService.getFeedArticles(order?)`   | Articles des thèmes suivis, tri par date   | `/feed`                                   |
-| `articlesService.getArticleById(id)`        | Article + auteur + thème + commentaires    | `/article/[id]`                           |
-| `topicsService.getTopicsWithSubscription()` | Tous les thèmes + statut d'abonnement      | `/topics`                                 |
-| `topicsService.getSubscribedTopics()`       | Thèmes suivis de l'utilisateur             | `/profile`                                |
-| `topicsService.getAllTopics()`              | Tous les thèmes (sans statut)              | menu déroulant de rédaction d'article     |
+| Méthode service                             | Opération                                | Page / usage                          |
+|:--------------------------------------------|:-----------------------------------------|:--------------------------------------|
+| `articlesService.getFeedArticles(order?)`   | Articles des thèmes suivis, tri par date | `/feed`                               |
+| `articlesService.getArticleById(id)`        | Article + auteur + thème + commentaires  | `/article/[id]`                       |
+| `topicsService.getTopicsWithSubscription()` | Tous les thèmes + statut d'abonnement    | `/topics`                             |
+| `topicsService.getSubscribedTopics()`       | Thèmes suivis de l'utilisateur           | `/profile`                            |
+| `topicsService.getAllTopics()`              | Tous les thèmes (sans statut)            | menu déroulant de rédaction d'article |
 
 *Reste à implémenter : la lecture du profil de l'utilisateur connecté (`getUserProfile` du périmètre initial), pour la
 page `/profile` ; l'identité provient déjà de la session via `getCurrentUserId`.*
@@ -293,17 +295,46 @@ Next/Image et au rendu statique partiel (PPR)."*
 
 ### 3.3 Revue technique
 
-Présentez une **synthèse critique du code** :
+Synthèse critique du code à l'état actuel du projet.
 
-* points forts (structure, typage TypeScript, sécurité Zod),
-* points à améliorer (complexité, dette technique),
-* actions correctives appliquées.
+#### Points forts
 
-*Exemple :*
+* **Typage strict de bout en bout** : `strict` activé, types Prisma générés et
+  partagés entre la couche d'accès aux données et le front. Les entrées des
+  Server Actions sont validées par Zod (`RegisterSchema`, `UpdateProfileSchema`,
+  `ArticleSchema`, `CommentSchema`) avant tout contact avec la base.
+* **Séparation des responsabilités** : découpage par domaine en
+  `repository` / `service` / `dto` sous `src/lib/`. L'identité de l'utilisateur
+  provient systématiquement de la session (`getCurrentUserId`), jamais d'un
+  paramètre client, ce qui ferme la porte à l'usurpation d'identité par
+  falsification de formulaire.
+* **Gestion d'erreur centralisée** : le mapping erreur → message des Server
+  Actions est factorisé dans `src/lib/actionError.ts` (`toActionError`),
+  supprimant la duplication des blocs `catch` Zod / `AppError`.
 
-* **Point fort :** Typage strict de bout en bout avec Prisma et TypeScript.
-* **À améliorer :** Duplication de la logique de validation dans plusieurs Server Actions.
-* **Action corrective :** Centralisation des schémas Zod dans un dossier lib/definitions.
+#### Points à améliorer
+
+* **Charge utile du fil d'actualité** : `ArticleCard` tronque l'extrait *à
+  l'affichage* via `line-clamp-4` (CSS `-webkit-line-clamp`), mais le contenu
+  intégral de chaque article transite malgré tout dans le HTML envoyé au client.
+  Pour un fil dense, cela gonfle inutilement la charge réseau. Acceptable au
+  périmètre du MVP (volume de seed limité) ; à traiter par un extrait calculé
+  côté serveur (`excerpt` borné, coupé sur un espace) si la volumétrie augmente.
+* **Course résiduelle (TOCTOU)** : le pré-check d'existence de la relation dans
+  `addArticle` / `addComment` laisse une fenêtre entre la vérification et
+  l'insertion. La contrainte de clé étrangère en base reste le garde-fou réel.
+* **Politique de mot de passe** : la borne `max(20)` est un héritage à
+  questionner ; elle n'apporte rien sur le plan de la sécurité.
+
+#### Actions correctives appliquées
+
+* Centralisation des schémas Zod et du helper d'erreur (`actionError.ts`).
+* Correction de `getArticleById` (appelait `repo.feed` au lieu de
+  `repo.findById`) et durcissement des écritures (validation Zod + insertion
+  typée en `*UncheckedCreateInput` + pré-check d'existence renvoyant un 404
+  propre plutôt qu'un 500 sur violation de clé étrangère).
+* Mutualisation du formulaire de compte (`AccountForm`) entre inscription et
+  profil, paramétré par props (mot de passe requis ou non).
 
 ---
 

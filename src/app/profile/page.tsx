@@ -5,6 +5,7 @@ import Button from "@/src/app/components/ui/Button";
 import {usersService} from "@/src/lib/users/users.service";
 import {topicsService} from "@/src/lib/topics/topics.service";
 import {unsubscribeAction} from "@/src/lib/subscriptions/unsubscribe.action";
+import Link from "next/link";
 
 /**
  * Page « Profil utilisateur » : formulaire d'édition (username, e-mail, mot de
@@ -32,7 +33,8 @@ export default async function ProfilePage() {
                     <h2 className="text-center text-2xl font-bold text-foreground">Abonnements</h2>
                     {subscribedTopics.length === 0 ? (
                         <p className="text-center text-sm text-muted-foreground">
-                            Tu n&apos;es abonné à aucun thème pour l&apos;instant.
+                            Tu n&apos;es abonné à aucun thème pour l&apos;instant.{' '}
+                            <Link className="underline" href="/topics">Voir les thèmes</Link>
                         </p>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2">
