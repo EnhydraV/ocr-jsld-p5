@@ -6,6 +6,9 @@ import {Prisma} from "@prisma/client";
  * (mot de passe haché compris) : c'est au service de filtrer ce qui sort.
  */
 export const usersRepository = {
+    /** Recherche par id (clé primaire). */
+    findById: (id: number) => prisma.user.findUnique({where: {id}}),
+
     /** Recherche par nom d'utilisateur (unique). */
     findByUsername: (username: string) => prisma.user.findUnique({where: {username}}),
 

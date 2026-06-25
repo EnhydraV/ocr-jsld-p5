@@ -16,4 +16,14 @@ export const topicsRepository = {
         where: {subscriptions: {some: {userId}}},
         orderBy: {name: "asc"}
     }),
+
+    /**
+     * Tous les thèmes, chacun accompagné de l'éventuel abonnement de l'utilisateur
+     * (0 ou 1 ligne) — de quoi déduire un flag « abonné » en une seule requête.
+     * @param userId - Id de l'utilisateur concerné.
+     */
+    allWithSubscription: (userId: number) => prisma.topic.findMany({
+        orderBy: {name: "asc"},
+        include: {subscriptions: {where: {userId}, select: {userId: true}}},
+    }),
 }

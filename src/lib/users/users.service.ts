@@ -53,6 +53,17 @@ class UsersService {
     }
 
     /**
+     * Retourne l'utilisateur connecté (pour pré-remplir le formulaire de profil).
+     * Attention : l'entité inclut le mot de passe haché — l'appelant ne doit
+     * exposer au client que les champs nécessaires (username, email).
+     * @throws AppError 401 si aucune session valide.
+     */
+    async getCurrentUser() {
+        const userId = await getCurrentUserId();
+        return this.repo.findById(userId);
+    }
+
+    /**
      * Met à jour le profil de l'utilisateur connecté. Le mot de passe n'est
      * **modifié (et validé)** que s'il est fourni non vide : un champ laissé
      * vide signifie « ne pas changer », et n'est alors ni haché ni écrit.
