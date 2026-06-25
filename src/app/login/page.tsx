@@ -2,7 +2,7 @@
 import {signIn} from "next-auth/react";
 import {Suspense, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
-import HeaderLogin from "@/src/app/components/HeaderLogin";
+import HeaderLogin from "@/src/app/components/header/HeaderLogin";
 import Button from "@/src/app/components/ui/Button";
 import Input from "@/src/app/components/ui/Input";
 

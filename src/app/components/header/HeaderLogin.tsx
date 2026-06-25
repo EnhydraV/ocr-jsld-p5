@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {ArrowLeft} from "lucide-react";
-import Logo from "@/src/app/components/Logo";
+import Logo from "@/src/app/components/header/Logo";
 
 // Header des formulaires (connexion / inscription). La maquette diffère selon
 // le viewport (incohérence assumée côté design) :

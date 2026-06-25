@@ -1,4 +1,4 @@
-import Logo from "@/src/app/components/Logo";
+import Logo from "@/src/app/components/header/Logo";
 
 // Header de l'accueil non connecté : grand logo centré.
 export default function HeaderHome() {

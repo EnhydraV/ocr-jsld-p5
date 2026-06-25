@@ -2,7 +2,7 @@
 
 import {useActionState} from "react";
 import {registerAction, type RegisterState} from "@/src/lib/users/register.action";
-import HeaderLogin from "@/src/app/components/HeaderLogin";
+import HeaderLogin from "@/src/app/components/header/HeaderLogin";
 import Button from "@/src/app/components/ui/Button";
 import Input from "@/src/app/components/ui/Input";
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import HeaderHome from "@/src/app/components/HeaderHome";
+import HeaderHome from "@/src/app/components/header/HeaderHome";
 import {buttonVariants} from "@/src/app/components/ui/Button";
 import {cn} from "@/src/lib/utils";
 
