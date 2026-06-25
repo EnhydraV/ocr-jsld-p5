@@ -1,6 +1,6 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.3**\
-Date : **12/06/2026**
+Version : **0.0.5**\
+Date : **25/06/2026**
 
 # Documentation et rapport du projet MDD
 
@@ -148,34 +148,44 @@ Action aujourd'hui, Route Handler demain) et testable en isolation.
 
 ### 2.3 API et schémas de données
 
-Présentez ici la **conception et la structuration de votre logique serveur** (Server Actions ou Route Handlers) :
+La logique serveur suit l'idiome de l'App Router, qui sépare nettement écritures et lectures :
 
-* Server Actions créées,
-* Types d'opérations (Query/Mutation),
-* exemples d'objets retournés,
-* schémas de données Prisma (modèles, relations, contraintes).
+* **Mutations → Server Actions** (`"use server"`, fichiers `*.action.ts`) : déclenchées depuis les formulaires / boutons
+  des Client Components. Elles **valident** (Zod), **contrôlent la session**, délèguent au service métier, puis
+  **redirigent** ou **revalident le cache**. Elles ne renvoient un état JSON que pour réafficher une erreur de
+  formulaire (`useActionState`).
+* **Lectures → Server Components** : il n'y a **pas** de Server Action de lecture. Les pages serveur appellent
+  directement la couche service (`lib/**/*.service.ts`), qui renvoie les données au rendu — une lecture n'a pas besoin
+  du round-trip d'une action.
+* **Authentification → Route Handler** `/api/auth/[...nextauth]` (NextAuth) ; `signIn` / `signOut` sont déclenchés côté
+  client (cf. §2.1), pas via une Server Action dédiée.
 
-| Server Action     | Type \*  | Description                                                                 | Retour / Réponse                  |
-|:------------------|:---------|:----------------------------------------------------------------------------|:----------------------------------|
-| login †           | Mutation | Authentifie un utilisateur                                                  | Cookie                            |
-| logout †          | Mutation | Déconnecte un utilisateur                                                   | Cookie                            |
-| register          | Mutation | Enregistre un utilisateur                                                   | JSON - succès de l'enregistrement |
-| getUserProfile    | Query    | Détail de l'utilisateur connecté                                            | JSON - profil utilisateur         |
-| updateUserProfile | Mutation | Met à jour informations de l'utilisateur connecté                           | JSON - succès de la mise à jour   |
-| getTopics         | Query    | Récupère la liste des thèmes et leur statut d'abonnement pour l'utilisateur | JSON - liste des thèmes           |
-| subscribeTopic    | Mutation | Abonne l'utilisateur au thème                                               | JSON - liste des thèmes           |
-| unsubscribeTopic  | Mutation | Désabonne l'utilisateur du thème                                            | JSON - liste des thèmes           |
-| getFeed           | Query    | Récupère les articles du fil, tri configurable                              | JSON - liste d'articles           |
-| addArticle        | Mutation | Ajouter un article                                                          | JSON - succès de l'ajout          |
-| getArticle        | Query    | Récupère le contenu d'un article et ses commentaires.                       | JSON - détail d'un article        |
-| addComment        | Mutation | Ajoute un commentaire à un article                                          | JSON - succès de l'ajout          |
+**Server Actions (mutations)**
 
-\* *Query = lecture sans effet de bord ; Mutation = opération modifiant l'état (écriture en base, ouverture de session,
-etc.).*
+| Server Action      | Opération                       | Entrée                                          | Retour / effet                                                                            |
+|:-------------------|:--------------------------------|:------------------------------------------------|:------------------------------------------------------------------------------------------|
+| `registerAction`   | Inscription                     | FormData (username, email, password)            | `redirect` `/login?registered=1` ; sinon `RegisterState` (message d'erreur)               |
+| `profileAction`    | Mise à jour du profil connecté  | FormData (username, email, password optionnel)  | `ProfileState` `{success, values}` + `revalidatePath('/profile')` ; sinon état d'erreur   |
+| `postAction`       | Publication d'un article        | FormData (topicId, title, content)              | `redirect` `/article/{id}?created=1` ; sinon `PostState` (erreur)                          |
+| `commentAction`    | Ajout d'un commentaire          | `articleId` (lié via `.bind()`) + FormData (content) | `redirect` `/article/{id}?comment=1` ; sinon `CommentState` (erreur)                  |
+| `subscribeAction`  | Abonnement à un thème           | `topicId` (lié via `.bind()`)                   | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                                 |
+| `unsubscribeAction`| Désabonnement d'un thème        | `topicId` (lié via `.bind()`)                   | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                                 |
 
-† *`login` / `logout` enrobent les helpers d'Auth.js (NextAuth) appelés depuis une Server Action ; le point d'entrée
-HTTP
-de l'authentification reste le Route Handler `/api/auth/[...nextauth]` décrit au §2.1.*
+Les erreurs *attendues* (Zod, `AppError`) sont traduites en message par le helper commun `toActionError`
+(`lib/actionError.ts`).
+
+**Lectures (Server Components → couche service)**
+
+| Méthode service                             | Opération                                  | Page / usage                              |
+|:--------------------------------------------|:-------------------------------------------|:------------------------------------------|
+| `articlesService.getFeedArticles(order?)`   | Articles des thèmes suivis, tri par date   | `/feed`                                   |
+| `articlesService.getArticleById(id)`        | Article + auteur + thème + commentaires    | `/article/[id]`                           |
+| `topicsService.getTopicsWithSubscription()` | Tous les thèmes + statut d'abonnement      | `/topics`                                 |
+| `topicsService.getSubscribedTopics()`       | Thèmes suivis de l'utilisateur             | `/profile`                                |
+| `topicsService.getAllTopics()`              | Tous les thèmes (sans statut)              | menu déroulant de rédaction d'article     |
+
+*Reste à implémenter : la lecture du profil de l'utilisateur connecté (`getUserProfile` du périmètre initial), pour la
+page `/profile` ; l'identité provient déjà de la session via `getCurrentUserId`.*
 
 Le diagramme entité-association ci-dessous représente les modèles Prisma et leurs relations.
 
@@ -268,6 +278,13 @@ Décrivez les actions menées pour **améliorer la performance** du code et du r
 * résultats d'audit (Lighthouse, Vercel Analytics, etc.),
 * points d'amélioration identifiés,
 * actions correctives appliquées.
+* accessibilité (aria-label), wave ?
+
+Qualité et conformité réglementaire des interfaces front-end
+
+Le code respecte les règles d’accessibilité web (ex : ARIA, contrastes, navigation clavier).
+Les composants respectent les bonnes pratiques de qualité et de sécurité.
+Les interfaces sont documentées et illustrées dans la documentation (ex : captures d’écran, composants clés identifiés).
 
 *Exemple : "Après audit Lighthouse, la performance est passée de 65 à 95/100 grâce à l'utilisation du composant
 Next/Image et au rendu statique partiel (PPR)."*
