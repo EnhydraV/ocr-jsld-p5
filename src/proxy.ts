@@ -5,6 +5,12 @@ import type {NextRequest} from "next/server";
 // Pages publiques : accessibles sans authentification.
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
+/**
+ * Videur d'authentification. Redirige les utilisateurs connectés hors des
+ * pages publiques et bloque l'accès aux pages privées par une 401.
+ * Garde grossière (connecté ou non) : le contrôle fin reste dans les services.
+ * @param req - Requête entrante interceptée par Next.
+ */
 export async function proxy(req: NextRequest) {
     const token = await getToken({req, secret: process.env.NEXTAUTH_SECRET});
     const isPublic = PUBLIC_PATHS.includes(req.nextUrl.pathname);

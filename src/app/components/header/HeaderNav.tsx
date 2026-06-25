@@ -7,11 +7,19 @@ import {Menu, User} from "lucide-react";
 import {cn} from "@/src/lib/utils";
 import LogoutButton from "@/src/app/components/header/LogoutButton";
 
+/** Liens de navigation principaux, partagés entre desktop et mobile. */
 const NAV_LINKS = [
     {href: "/feed", label: "Articles"},
     {href: "/topics", label: "Thèmes"},
 ];
 
+/**
+ * Navigation de la zone connectée.
+ * - Desktop (≥ sm) : nav en ligne, lien actif souligné en violet (usePathname).
+ * - Mobile : bouton burger ouvrant un panneau glissant depuis la droite,
+ *   avec overlay cliquable pour fermer. Le panneau reste monté en permanence
+ *   pour animer le glissement, mais devient inerte une fois fermé.
+ */
 export default function HeaderNav() {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);

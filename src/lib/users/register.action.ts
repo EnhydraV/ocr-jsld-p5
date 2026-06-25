@@ -5,11 +5,25 @@ import { redirect } from "next/navigation";
 import { usersService } from "@/src/lib/users/users.service";
 import { AppError } from "@/src/errors/AppError";
 
+/**
+ * État renvoyé par {@link registerAction} à `useActionState`.
+ * @property error - Message d'erreur à afficher (absent si succès).
+ * @property values - Saisies à réinjecter dans le formulaire après un échec.
+ */
 export type RegisterState = {
     error?: string;
     values?: { username: string; email: string };
 };
 
+/**
+ * Server Action d'inscription. Les erreurs *attendues* sont retournées dans
+ * l'état (validation Zod, conflit métier `AppError`, ou message générique pour
+ * l'inattendu) plutôt que jetées ; le `redirect` final est volontairement hors
+ * du `try/catch` (il fonctionne en levant une exception interceptée par Next).
+ * @param _prev - État précédent (imposé par `useActionState`, non utilisé ici).
+ * @param formData - Données du formulaire d'inscription.
+ * @returns Le nouvel état : message d'erreur + valeurs saisies, ou redirection.
+ */
 export async function registerAction(
     _prev: RegisterState,
     formData: FormData,

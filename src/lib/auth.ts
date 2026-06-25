@@ -4,6 +4,10 @@ import bcrypt from "bcrypt";
 import {usersService} from "@/src/lib/users/users.service";
 import {AppError} from "@/src/errors/AppError";
 
+/**
+ * Configuration NextAuth : provider Credentials (email/username + mot de passe),
+ * stratégie JWT, et propagation de l'id Prisma jusque dans la session.
+ */
 export const authOptions : AuthOptions = {
     providers: [
         CredentialsProvider({
@@ -56,6 +60,12 @@ export const authOptions : AuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
 };
 
+/**
+ * Récupère l'id de l'utilisateur connecté côté serveur, source d'identité
+ * de confiance pour les services (jamais de paramètre client).
+ * @returns L'id Prisma (Int) de l'utilisateur.
+ * @throws AppError 401 si aucune session valide.
+ */
 export async function getCurrentUserId(): Promise<number> {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) throw new AppError(401, "Authentication required");

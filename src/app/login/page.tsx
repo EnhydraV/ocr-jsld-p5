@@ -6,8 +6,11 @@ import HeaderLogin from "@/src/app/components/header/HeaderLogin";
 import Button from "@/src/app/components/ui/Button";
 import Input from "@/src/app/components/ui/Input";
 
-// `useSearchParams` impose un périmètre Suspense (sinon Next bascule toute la
-// page en rendu client). On isole donc le formulaire ici.
+/**
+ * Page de connexion. `useSearchParams` (lu dans `LoginForm`) impose un périmètre
+ * Suspense, sinon Next bascule toute la page en rendu client : on isole donc le
+ * formulaire derrière ce `<Suspense>`.
+ */
 export default function Login() {
     return (
         <Suspense>
@@ -16,6 +19,12 @@ export default function Login() {
     );
 }
 
+/**
+ * Formulaire de connexion (Client Component). Appelle `signIn("credentials")`
+ * sans redirection automatique pour gérer l'erreur localement, puis route vers
+ * le fil en cas de succès. Affiche un bandeau de confirmation si l'utilisateur
+ * arrive depuis une inscription réussie (`?registered=1`).
+ */
 function LoginForm() {
     const router = useRouter();
     // `?registered=1` posé par la Server Action d'inscription : confirme la

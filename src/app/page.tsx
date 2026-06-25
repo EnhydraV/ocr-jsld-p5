@@ -3,6 +3,11 @@ import HeaderHome from "@/src/app/components/header/HeaderHome";
 import {buttonVariants} from "@/src/app/components/ui/Button";
 import {cn} from "@/src/lib/utils";
 
+/**
+ * Page d'accueil non connectée : logo centré et deux accès « Se connecter » /
+ * « S'inscrire ». Les utilisateurs déjà authentifiés sont redirigés vers le fil
+ * en amont par le videur (`proxy.ts`).
+ */
 export default function Home() {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center gap-10">

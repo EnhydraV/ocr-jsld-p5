@@ -1,5 +1,10 @@
 import * as z from "zod";
 
+/**
+ * Schéma de validation de l'inscription. Les messages sont en français car
+ * affichés tels quels à l'utilisateur. La politique du mot de passe est
+ * imposée par le brief.
+ */
 export const RegisterSchema = z.object({
     username: z
         .string()
@@ -18,9 +23,11 @@ export const RegisterSchema = z.object({
         .regex(/[^A-Za-z0-9]/, "Le mot de passe doit contenir au moins un caractère spécial."),
 });
 
+/** Schéma de validation de la connexion (identifiant + mot de passe). */
 export const LoginSchema = z.object({
     usernameoremail: z.string(),
     password: z.string()
 })
 
+/** Type des données d'inscription, inféré depuis {@link RegisterSchema}. */
 export type RegisterDto = z.infer<typeof RegisterSchema>;

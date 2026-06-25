@@ -2,10 +2,12 @@ import Link from "next/link";
 import {ArrowLeft} from "lucide-react";
 import Logo from "@/src/app/components/header/Logo";
 
-// Header des formulaires (connexion / inscription). La maquette diffère selon
-// le viewport (incohérence assumée côté design) :
-// * Desktop : logo calé à gauche dans une barre supérieure séparée d'une ligne, flèche de retour dessous.
-// * Mobile : flèche de retour en haut, puis logo (plus gros) centré dessous, sans ligne de séparation.
+/**
+ * Header des formulaires (connexion / inscription). La maquette diffère selon
+ * le viewport (incohérence assumée côté design) :
+ * - Desktop : logo calé à gauche dans une barre supérieure séparée d'une ligne, flèche de retour dessous.
+ * - Mobile : flèche de retour en haut, puis logo (plus gros) centré dessous, sans ligne de séparation.
+ */
 export default function HeaderLogin() {
     return (
         <header className="flex flex-col">

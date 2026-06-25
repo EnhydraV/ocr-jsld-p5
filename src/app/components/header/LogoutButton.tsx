@@ -3,10 +3,14 @@
 import {signOut} from "next-auth/react";
 import {cn} from "@/src/lib/utils";
 
-// Seul ce bouton a besoin d'interactivité : on isole la frontière client
-// ici pour garder Header en Server Component.
 type LogoutButtonProps = {className?: string};
 
+/**
+ * Bouton de déconnexion (rouge). Seul élément du header à avoir besoin
+ * d'interactivité : on isole ici la frontière client pour garder Header en
+ * Server Component.
+ * @param className - Classes supplémentaires fusionnées via `cn`.
+ */
 export default function LogoutButton({className}: LogoutButtonProps) {
     return (
         <button

@@ -8,6 +8,12 @@ import Input from "@/src/app/components/ui/Input";
 
 const initialState: RegisterState = {};
 
+/**
+ * Page d'inscription (Client Component). Pilotée par `useActionState` autour de
+ * la Server Action `registerAction` : l'état renvoyé porte le message d'erreur
+ * éventuel et les valeurs saisies (pour re-remplir les champs après un échec).
+ * En cas de succès, la Server Action redirige vers `/login?registered=1`.
+ */
 export default function Page() {
     const [state, formAction, pending] = useActionState(registerAction, initialState);
 

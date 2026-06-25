@@ -17,6 +17,11 @@ export const metadata: Metadata = {
     description: "Réseau social pour développeurs",
 };
 
+/**
+ * Layout racine de l'application : déclare la langue (`fr`), les polices Geist
+ * et le conteneur centré (`max-w-200`) commun à toutes les pages.
+ * @param children - Le contenu de la page rendue.
+ */
 export default function RootLayout(
     {children}: { children: React.ReactNode }) {
     return (
