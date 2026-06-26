@@ -112,7 +112,7 @@ export default function AccountForm({
                         autoComplete="new-password"
                         required={passwordRequired}
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-foreground">
                         {passwordRequired
                             ? "Au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial."
                             : "Laisser vide pour ne pas le changer. Sinon : 8 caractères min., une majuscule, une minuscule, un chiffre et un caractère spécial."}

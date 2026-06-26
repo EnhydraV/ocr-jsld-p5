@@ -27,7 +27,7 @@ export default function Error({error, reset,}: {
                 <h1 className="text-2xl font-semibold text-foreground">
                     Quelque chose s&apos;est mal passé
                 </h1>
-                <p className="text-muted-foreground max-w-md">
+                <p className="text-foreground max-w-md">
                     Une erreur inattendue est survenue. Vous pouvez réessayer.
                 </p>
                 <button

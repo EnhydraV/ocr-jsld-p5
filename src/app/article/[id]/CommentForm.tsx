@@ -3,7 +3,6 @@
 import {useActionState} from "react";
 import {Send} from "lucide-react";
 import type {CommentState} from "@/src/lib/comments/comment.action";
-import Button from "@/src/app/components/ui/Button";
 import Textarea from "@/src/app/components/ui/Textarea";
 
 const initialState: CommentState = {};
@@ -46,17 +45,23 @@ export default function CommentForm({action}: CommentFormProps) {
                     id="content"
                     name="content"
                     rows={4}
-                    placeholder="Partage ton avis…"
+                    placeholder="Écrivez ici votre commentaire"
                     defaultValue={state.values?.content}
                     required
                 />
             </div>
 
             <div className="flex justify-end">
-                {/* Bouton muet (icône avion en papier) : libellé porté par aria-label. */}
-                <Button type="submit" size="sm" disabled={pending} aria-label="Publier le commentaire">
-                    <Send className="size-4" aria-hidden/>
-                </Button>
+                {/* Icône avion en papier nue (pas de fond ni contour) : libellé porté
+                    par aria-label, couleur violette via text-primary. */}
+                <button
+                    type="submit"
+                    disabled={pending}
+                    aria-label="Publier le commentaire"
+                    className="cursor-pointer text-primary transition-colors hover:text-primary/80 disabled:pointer-events-none disabled:opacity-60"
+                >
+                    <Send className="size-8" aria-hidden/>
+                </button>
             </div>
         </form>
     );

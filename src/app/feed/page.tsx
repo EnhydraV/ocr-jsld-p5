@@ -39,7 +39,7 @@ export default async function Feed({searchParams}: FeedPageProps) {
                 </div>
 
                 {articles.length === 0 ? (
-                    <p className="text-center text-sm text-muted-foreground">
+                    <p className="text-center text-sm text-foreground">
                         Aucun article pour l&apos;instant. Abonne-toi à des thèmes pour remplir ton fil.{" "}
                         <Link className="underline" href="/topics">Voir les thèmes</Link>
                     </p>

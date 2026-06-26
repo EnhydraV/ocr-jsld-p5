@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {ArrowLeft} from "lucide-react";
 import {notFound} from "next/navigation";
 import Header from "@/src/app/components/header/Header";
 import CommentForm from "./CommentForm";
@@ -44,13 +45,6 @@ export default async function ArticlePage({params, searchParams}: ArticlePagePro
         <>
             <Header/>
             <section className="mx-auto max-w-180 space-y-8 py-8">
-                <Link
-                    href="/feed"
-                    className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
-                >
-                    ← Retour au fil
-                </Link>
-
                 {(created || comment) && (
                     <p
                         role="status"
@@ -62,12 +56,21 @@ export default async function ArticlePage({params, searchParams}: ArticlePagePro
                 )}
 
                 <article className="space-y-5">
-                    <h1 className="text-3xl font-bold text-foreground">{article.title}</h1>
+                    <div className="flex items-start gap-3">
+                        <Link
+                            href="/feed"
+                            aria-label="Retour au fil"
+                            className="inline-flex items-center text-foreground transition-colors hover:text-primary"
+                        >
+                            <ArrowLeft className="size-8" aria-hidden/>
+                        </Link>
+                        <h1 className="text-3xl font-bold text-foreground">{article.title}</h1>
+                    </div>
                     {/* Maquette : date, auteur et thème sur une même ligne sous le titre. */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground">
                         <span>{dateFormatter.format(article.createdAt)}</span>
                         <span>{article.author.username}</span>
-                        <span className="text-primary">{article.topic.name}</span>
+                        <span className="text-foreground">{article.topic.name}</span>
                     </div>
                     <div className="space-y-4 leading-relaxed text-foreground">
                         {paragraphs.map((paragraph, index) => (
@@ -84,7 +87,7 @@ export default async function ArticlePage({params, searchParams}: ArticlePagePro
                     <CommentForm action={boundCommentAction}/>
 
                     {article.comments.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-foreground">
                             Aucun commentaire pour l&apos;instant. Lance la discussion.
                         </p>
                     ) : (

@@ -23,11 +23,11 @@ export default function ArticleCard({id, title, authorName, createdAt, content}:
             className="flex flex-col gap-3 rounded-lg bg-muted p-5 transition-colors hover:bg-muted/70"
         >
             <h2 className="font-semibold text-foreground">{title}</h2>
-            <div className="flex justify-between text-sm text-muted-foreground">
+            <div className="flex justify-between text-sm text-foreground">
                 <span>{dateFormatter.format(createdAt)}</span>
                 <span>{authorName}</span>
             </div>
-            <p className="line-clamp-4 text-sm text-muted-foreground">{content}</p>
+            <p className="line-clamp-4 text-sm text-foreground">{content}</p>
         </Link>
     );
 }

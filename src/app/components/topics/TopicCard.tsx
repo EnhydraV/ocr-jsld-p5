@@ -17,7 +17,7 @@ export default function TopicCard({name, description, action}: TopicCardProps) {
     return (
         <article className="flex flex-col gap-3 rounded-lg bg-muted p-5">
             <h2 className="font-semibold text-foreground">{name}</h2>
-            <p className="flex-1 text-sm text-muted-foreground">{description}</p>
+            <p className="flex-1 text-sm text-foreground">{description}</p>
             <div className="flex justify-center pt-1">{action}</div>
         </article>
     );

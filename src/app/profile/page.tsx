@@ -32,7 +32,7 @@ export default async function ProfilePage() {
                 <div className="space-y-4 border-t border-border pt-8">
                     <h2 className="text-center text-2xl font-bold text-foreground">Abonnements</h2>
                     {subscribedTopics.length === 0 ? (
-                        <p className="text-center text-sm text-muted-foreground">
+                        <p className="text-center text-sm text-foreground">
                             Tu n&apos;es abonné à aucun thème pour l&apos;instant.{' '}
                             <Link className="underline" href="/topics">Voir les thèmes</Link>
                         </p>
