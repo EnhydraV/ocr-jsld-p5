@@ -26,12 +26,12 @@ export default async function TopicsPage() {
                             description={topic.description}
                             action={
                                 topic.isSubscribed ? (
-                                    <span className={cn(buttonVariants({variant: "muted", size: "sm"}), "cursor-default")}>
+                                    <span className={cn(buttonVariants({variant: "muted", size: "sm"}), "min-w-[33%] cursor-default")}>
                                         Déjà abonné
                                     </span>
                                 ) : (
-                                    <form action={subscribeAction.bind(null, topic.id)}>
-                                        <Button type="submit" size="sm">S&apos;abonner</Button>
+                                    <form action={subscribeAction.bind(null, topic.id)} className="min-w-[33%]">
+                                        <Button type="submit" size="sm" className="w-full">S&apos;abonner</Button>
                                     </form>
                                 )
                             }

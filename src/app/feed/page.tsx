@@ -26,7 +26,7 @@ export default async function Feed({searchParams}: FeedPageProps) {
         <>
             <Header/>
             <section className="space-y-6 py-8">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <Link href="/article/new" className={buttonVariants({size: "sm"})}>
                         Créer un article
                     </Link>

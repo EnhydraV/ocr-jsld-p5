@@ -48,7 +48,10 @@ export default function HeaderNav() {
                 <Link
                     href="/profile"
                     aria-label="Mon profil"
-                    className="flex size-9 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:text-primary"
+                    className={cn(
+                        "flex size-9 items-center justify-center rounded-full bg-muted transition-colors hover:text-primary",
+                        isActive("/profile") ? "text-primary" : "text-foreground",
+                    )}
                 >
                     <User className="size-5"/>
                 </Link>
@@ -89,7 +92,7 @@ export default function HeaderNav() {
                 {/* Panneau latéral droit */}
                 <nav
                     className={cn(
-                        "absolute inset-y-0 right-0 flex w-64 flex-col gap-5 border-l border-border bg-background p-6 transition-transform",
+                        "absolute inset-y-0 right-0 flex w-64 flex-col items-end gap-5 border-l border-border bg-background p-6 transition-transform",
                         open ? "translate-x-0" : "translate-x-full",
                     )}
                 >
@@ -111,7 +114,10 @@ export default function HeaderNav() {
                         aria-label="Mon profil"
                         tabIndex={open ? 0 : -1}
                         onClick={() => setOpen(false)}
-                        className="mt-auto flex size-9 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:text-primary"
+                        className={cn(
+                            "mt-auto flex size-9 items-center justify-center rounded-full bg-muted transition-colors hover:text-primary",
+                            isActive("/profile") ? "text-primary" : "text-foreground",
+                        )}
                     >
                         <User className="size-5"/>
                     </Link>
