@@ -47,5 +47,5 @@ export async function proxy(req: NextRequest) {
 // au lieu de l'image. Les autres médias de `public/` (ex. futures images d'articles) restent volontairement derrière le
 // videur pour être protégés par l'authentification.
 export const config = {
-    matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|logo\\.png).*)"],
+    matcher: ["/((?!api/auth|_next/static|_next/image|robots.txt|favicon.ico|logo\\.png).*)"],
 };
