@@ -1,6 +1,8 @@
 'use client';
 
 import {useEffect} from 'react';
+import Link from 'next/link';
+import {usePathname} from 'next/navigation';
 
 /**
  * Frontière d'erreur de l'App Router (`error.tsx`). Capture les erreurs de
@@ -15,6 +17,10 @@ export default function Error({error, reset,}: {
     error: Error & { digest?: string };
     reset: () => void;
 }) {
+    const pathname = usePathname();
+    // Inutile de proposer un retour à l'accueil si l'erreur survient déjà dessus.
+    const showHomeLink = pathname !== '/';
+
     useEffect(() => {
         // Journalisation possible vers un service de suivi d'erreurs
         console.error(error);
@@ -30,13 +36,23 @@ export default function Error({error, reset,}: {
                 <p className="text-foreground max-w-md">
                     Une erreur inattendue est survenue. Vous pouvez réessayer.
                 </p>
-                <button
-                    type="button"
-                    onClick={() => reset()}
-                    className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                    Réessayer
-                </button>
+                <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <button
+                        type="button"
+                        onClick={() => reset()}
+                        className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                        Réessayer
+                    </button>
+                    {showHomeLink && (
+                        <Link
+                            href="/"
+                            className="inline-flex items-center justify-center px-6 py-3 border border-input text-foreground rounded-lg hover:bg-muted transition-colors"
+                        >
+                            Retour à l&apos;accueil
+                        </Link>
+                    )}
+                </div>
             </div>
         </div>
     );

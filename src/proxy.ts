@@ -3,7 +3,7 @@ import {NextResponse} from "next/server";
 import type {NextRequest} from "next/server";
 
 // Pages publiques : accessibles sans authentification.
-const PUBLIC_PATHS = ["/", "/login", "/register"];
+const PUBLIC_PATHS = ["/", "/login", "/register","/boom"];
 
 /**
  * Videur d'authentification. Redirige les utilisateurs connectés hors des
