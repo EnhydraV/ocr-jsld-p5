@@ -7,7 +7,8 @@ const PUBLIC_PATHS = ["/", "/login", "/register"];
 
 /**
  * Videur d'authentification. Redirige les utilisateurs connectés hors des
- * pages publiques et bloque l'accès aux pages privées par une 401.
+ * pages publiques. Pour les pages privées sans session : redirige vers le login
+ * (navigation GET) ou renvoie une 401 (mutations, ex. server actions POST).
  * Garde grossière (connecté ou non) : le contrôle fin reste dans les services.
  * @param req - Requête entrante interceptée par Next.
  */
@@ -23,9 +24,18 @@ export async function proxy(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // Toute autre route : authentification obligatoire, sinon 401.
+    // Toute autre route : authentification obligatoire.
     if (!token) {
-        return new NextResponse("Unauthorized", {status: 401});
+        // Les server actions (POST) doivent recevoir une vraie 401 : une redirection
+        // serait suivie par le client et renverrait le HTML du login comme résultat.
+        if (req.method !== "GET") {
+            return new NextResponse("Unauthorized", {status: 401});
+        }
+        // Navigation classique : on envoie l'utilisateur se connecter, en gardant
+        // la destination voulue pour y revenir après authentification.
+        const loginUrl = new URL("/login", req.url);
+        loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+        return NextResponse.redirect(loginUrl);
     }
 
     return NextResponse.next();
