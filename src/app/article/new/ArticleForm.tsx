@@ -36,6 +36,9 @@ export default function ArticleForm({topics}: ArticleFormProps) {
             )}
 
             <div className="space-y-1.5">
+                <label htmlFor="topicId" className="text-sm font-medium text-foreground">
+                    Thème
+                </label>
                 <Select
                     id="topicId"
                     name="topicId"
@@ -54,6 +57,9 @@ export default function ArticleForm({topics}: ArticleFormProps) {
             </div>
 
             <div className="space-y-1.5">
+                <label htmlFor="title" className="text-sm font-medium text-foreground">
+                    Titre
+                </label>
                 <Input
                     id="title"
                     name="title"
@@ -64,6 +70,9 @@ export default function ArticleForm({topics}: ArticleFormProps) {
             </div>
 
             <div className="space-y-1.5">
+                <label htmlFor="content" className="text-sm font-medium text-foreground">
+                    Contenu
+                </label>
                 <Textarea
                     id="content"
                     name="content"
