@@ -21,15 +21,28 @@ export default function Login() {
 
 /**
  * Formulaire de connexion (Client Component). Appelle `signIn("credentials")`
- * sans redirection automatique pour gérer l'erreur localement, puis route vers
- * le fil en cas de succès. Affiche un bandeau de confirmation si l'utilisateur
- * arrive depuis une inscription réussie (`?registered=1`).
+ * sans redirection automatique pour gérer l'erreur localement, puis route en cas
+ * de succès vers la page initialement demandée (`?callbackUrl=…` posé par le
+ * proxy, validé par `safeCallbackUrl`) ou le fil à défaut. Affiche un bandeau de
+ * confirmation si l'utilisateur arrive depuis une inscription (`?registered=1`).
  */
+/**
+ * N'accepte qu'un chemin interne comme cible de redirection après connexion.
+ * Bloque les redirections ouvertes (`https://evil.com`, `//evil.com`) qu'un
+ * `?callbackUrl=…` forgé tenterait d'injecter.
+ * @param url - Valeur brute lue dans la query.
+ * @returns Le chemin si interne, sinon `/feed` par défaut.
+ */
+function safeCallbackUrl(url: string | null): string {
+    return url && url.startsWith("/") && !url.startsWith("//") ? url : "/feed";
+}
+
 function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     // `?registered=1` posé par la Server Action d'inscription : confirme la
     // création du compte sur l'écran de connexion.
-    const justRegistered = useSearchParams().get("registered") === "1";
+    const justRegistered = searchParams.get("registered") === "1";
     // Champ unique « E-mail ou nom d'utilisateur » (cf. maquette). NextAuth
     // attend la clé `email`, que `authorize` résout via findByEmailOrUsername.
     const [identifier, setIdentifier] = useState("");
@@ -53,7 +66,9 @@ function LoginForm() {
             setError("Identifiant ou mot de passe incorrect.");
             setPending(false);
         } else {
-            router.push("/feed");
+            // Retour à la page initialement demandée (posée par le proxy), à
+            // défaut le fil. Validé contre les redirections ouvertes.
+            router.push(safeCallbackUrl(searchParams.get("callbackUrl")));
         }
     };
 
