@@ -1,6 +1,6 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.6**\
-Date : **25/06/2026**
+Version : **0.0.7**\
+Date : **27/06/2026**
 
 # Documentation et rapport du projet MDD
 
@@ -150,7 +150,7 @@ Action aujourd'hui, Route Handler demain) et testable en isolation.
 
 ### 2.3 API et schémas de données
 
-La logique serveur suit l'idiome de l'App Router, qui sépare nettement écritures et lectures :
+La logique serveur suit le principe de l'App Router, qui sépare nettement écritures et lectures :
 
 * **Mutations → Server Actions** (`"use server"`, fichiers `*.action.ts`) : déclenchées depuis les formulaires / boutons
   des Client Components. Elles **valident** (Zod), **contrôlent la session**, délèguent au service métier, puis
@@ -259,17 +259,38 @@ attribut), pour les liens auteur et catégorie. La table `SUBSCRIPTION` porte la
 
 ### 3.1 Stratégie de test
 
-Décrivez les tests mis en place :
+La couche **logique côté serveur** (services, repositories, DTO Zod, Server
+Actions, gestion d'erreurs) est testée en priorité, car c'est elle qui porte les
+règles métier (unicité, validation du mot de passe, identité issue de la session,
+404 sur article inexistant…). Les composants React et les pages relèvent des
+tests **e2e**, prévus dans un second temps.
 
-* **unitaires** (Vitest/Jest), **d'intégration**, **end-to-end** (Playwright/Cypress),
-* frameworks utilisés,
-* taux de couverture.
+Deux niveaux complémentaires, sous **Vitest** :
 
-| Type de test       | Outil / framework     | Portée                     | Résultats |
-|:-------------------|:----------------------|:---------------------------|:----------|
-| Test unitaire      | Vitest                | Server Actions / Utils     |           |
-| Test d'intégration | React Testing Library | Composants Client / Server |           |
-| Test e2e           | Playwright            | Parcours critiques         |           |
+* **Unitaire** — chaque service est testé isolément : le client Prisma est
+  remplacé par un mock profond (`vitest-mock-extended`) et la session
+  (`getCurrentUserId`) est stubée. Les tests traversent les *vrais* repositories
+  (injectés par défaut dans les services), qui sont donc couverts sans base
+  réelle. S'y ajoutent les schémas Zod, le helper `toActionError`, `AppError`,
+  la configuration NextAuth (`authorize`, callbacks) et les Server Actions.
+* **Intégration** — les mêmes services rejoués contre une **vraie base
+  PostgreSQL éphémère** (Testcontainers, image `postgres:16-alpine`, migrations
+  Prisma appliquées au démarrage) : on valide les requêtes réelles, les
+  contraintes d'unicité, les `include` de relations et le double abonnement sans
+  doublon. Nécessite Docker.
+
+Seuil de couverture fixé à **75 %** (statements / branches / functions / lines)
+sur la couche `src/lib` + `src/errors` ; **atteint** : ~99 % des instructions et
+~81 % des branches sur le périmètre testé (75 tests unitaires).
+
+Commandes : `npm test` (unitaire), `npm run test:coverage` (couverture),
+`npm run test:integration` (intégration, Docker requis).
+
+| Type de test       | Outil / framework                    | Portée                                                                | Résultats                                           |
+|:-------------------|:-------------------------------------|:----------------------------------------------------------------------|:----------------------------------------------------|
+| Test unitaire      | Vitest + vitest-mock-extended        | Services, repositories, DTO, Server Actions, auth, erreurs            | 75 tests ✓ — couverture ~99 % stmts / 81 % branches |
+| Test d'intégration | Vitest + Testcontainers (PostgreSQL) | Services rejoués sur vraie base (relations, contraintes, double abonnement sans doublon) | 13 tests (exécution locale, Docker requis)          |
+| Test e2e           | Playwright                           | Parcours critiques (connexion, fil, publication)                      | À venir                                             |
 
 <a id="performance"></a>
 
@@ -364,11 +385,14 @@ R : Rafraîchissez la page. Si le problème persiste, vérifiez votre connexion 
 Décrivez les tâches confiées à l'IA ou à des collaborateurs juniors, et comment vous avez **revérifié, validé ou corrigé
 ** leur travail.
 
-| Tâche déléguée                                                                                    | Outil / collaborateur | Objectif                                                                           | Vérification effectuée                                                                                          |
-|:--------------------------------------------------------------------------------------------------|:----------------------|:-----------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------|
-| Mise en place de la documentation (sommaire cliquable, ancres PDF-compatibles, fichiers de suivi) | Claude                | Documentation navigable et traçabilité du projet                                   | Ouverture de `DOCUMENTATION.md` sur GitHub, test de chaque lien du sommaire et relecture du contenu généré      |
-| Revue critique du tableau des choix techniques (complétude, justifications, ordre, coquilles)     | Claude                | Crédibiliser la section « Choix techniques »                                       | Validation point par point des remarques, arbitrage des reformulations conservées et relecture du tableau final |
-| Génération des diagrammes ERD et d'archtecture                                                    | Claude                | Réalisation de diagrammes compatibles avec mon IDE et Github dans la documentation | Validation de la suggestion du format mermaid, vérification de la cohérence et lisibilité des diagrammes        |
+| Tâche déléguée                                                                                                                                                                                                                                     | Outil / collaborateur | Objectif                                                                                         | Vérification effectuée                                                                                                                                                                                                                                                                                                                                                                             |
+|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|:-------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Mise en place de la documentation (sommaire cliquable, ancres PDF-compatibles, fichiers de suivi)                                                                                                                                                  | Claude                | Documentation navigable et traçabilité du projet                                                 | Ouverture de `DOCUMENTATION.md` sur GitHub, test de chaque lien du sommaire et relecture du contenu généré                                                                                                                                                                                                                                                                                         |
+| Revue critique du tableau des choix techniques (complétude, justifications, ordre, coquilles)                                                                                                                                                      | Claude                | Crédibiliser la section « Choix techniques »                                                     | Validation point par point des remarques, arbitrage des reformulations conservées et relecture du tableau final                                                                                                                                                                                                                                                                                    |
+| Génération des diagrammes ERD et d'archtecture                                                                                                                                                                                                     | Claude                | Réalisation de diagrammes compatibles avec mon IDE et Github dans la documentation               | Validation de la suggestion du format mermaid, vérification de la cohérence et lisibilité des diagrammes                                                                                                                                                                                                                                                                                           |
+| Rédaction des données de démonstration du seed (6 utilisateurs, 63 articles de 3 paragraphes, 3 commentaires par article)                                                                                                                          | Claude                | Disposer d'un jeu de données réaliste pour développer et tester le fil et le détail d'un article | Vérification des champs face à `schema.prisma`, contrôle de l'idempotence (upsert users + purge/recréation articles et commentaires), respect de la règle « commentaires postés par des non-auteurs distincts », conformité du mot de passe de dev à la politique du brief et relecture du contenu rédigé                                                                                          |
+| Intégration des pages connectées sur la couche métier : `/topics`, `/profile`, `/feed` puis détail d'article `/article/[id]` (lecture + formulaire de commentaire) et primitives associées (`AccountForm`, `ArticleCard`, `TopicCard`, `Textarea`) | Claude                | Brancher le front sur les services et Server Actions déjà en place                               | Relecture du flux `getArticleById` → rendu → `commentAction.bind()`, confrontation à la maquette, contrôle du `notFound()` sur id invalide/article absent et de l'ordre des arguments liés `(articleId, prev, formData)`, cohérence des lectures avec le tableau des server actions                                                                                                                |
+| Mise en place de la suite de tests Vitest (unitaires + intégration) sur la couche serveur                                                                                                                                                          | Claude                | Tester la logique métier et atteindre le seuil de couverture de 75 %                             | Exécution de `npm run test:coverage` (75 tests au vert, ~99 % stmts / 81 % branches) et `tsc --noEmit` sans erreur ; relecture des assertions face au comportement attendu (codes 401/404/409, mot de passe haché jamais en clair, identité issue de la session, double abonnement sans doublon) ; vérification que les tests d'intégration ciblent bien le conteneur Postgres et non le `.env` local |
 
 ---
 
