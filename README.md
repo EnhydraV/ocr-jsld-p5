@@ -1,112 +1,186 @@
-# MDD - Monde de Dév
+# MDD — Monde de Dév
 
-Réseau social pour développeurs
+Réseau social à destination des développeurs : on s'abonne à des thèmes de
+programmation, on publie des articles, on en discute en commentaires. Le code
+de ce dépôt couvre le périmètre du MVP décrit dans `BRIEF.md`.
 
-## Description
+## Sommaire
 
-MDD (Monde de Dév) est une plateforme permettant aux développeurs de s'abonner à des sujets de programmation, publier des articles et échanger via des commentaires.
+- [Stack technique](#stack-technique)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Base de données](#base-de-données)
+- [Lancer l'application](#lancer-lapplication)
+- [Tests](#tests)
+- [Scripts npm](#scripts-npm)
+- [Organisation du code](#organisation-du-code)
+- [Fonctionnalités](#fonctionnalités)
+- [Documentation et références](#documentation-et-références)
 
-## Getting Started
+## Stack technique
 
-### Prerequisites
+| Couche | Choix |
+| :---- | :---- |
+| Framework | Next.js 16 — App Router, Server Components et Server Actions |
+| Langage | TypeScript 5 |
+| Runtime | Node.js 22 LTS |
+| Interface | Tailwind CSS 4 + primitives UI maison (CVA + `tailwind-merge`) |
+| Authentification | NextAuth v4 (Credentials, session JWT) + bcrypt |
+| Base de données | PostgreSQL |
+| ORM | Prisma 7 (adaptateur `@prisma/adapter-pg`) |
+| Validation | Zod |
+| Tests | Vitest (unitaires et intégration) + Playwright (e2e, audits Lighthouse) |
 
-- Node.js 22+
-- npm ou yarn
-- PostgreSQL
+Le détail et la justification de chaque choix sont consignés dans
+`DOCUMENTATION.md`.
 
-### Installation
+## Prérequis
+
+- Node.js 22+ (la version est épinglée dans `.nvmrc`)
+- npm
+- Docker, pour faire tourner PostgreSQL en local
+
+## Installation
 
 ```bash
-git clone <repository-url>
-cd P5-DFSJS
+git clone https://github.com/EnhydraV/ocr-jsld-p5
+cd ocr-jsld-p5
 npm install
 ```
 
-### Base de données (Docker)
+## Configuration
 
-Lancer une instance PostgreSQL en local avec Docker :
+Les variables d'environnement sont décrites dans `.env.example`. On part de ce
+modèle :
 
-```bash
-docker run --name mdd-postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mdd_db -p 5432:5432 -d postgres:17
-```
-
-Pour arrêter / relancer le conteneur :
-
-```bash
-docker stop mdd-postgres
-docker start mdd-postgres
-```
-
-### Configuration
-
-1. Copier le fichier d'environnement :
 ```bash
 cp .env.example .env
 ```
 
-2. Les variables par défaut dans `.env` correspondent au conteneur Docker ci-dessus :
+Les variables `DATABASE_*` servent à la fois à `docker-compose.yml` et à la
+`DATABASE_URL` (construite par interpolation) que consomme Prisma — une seule
+source de vérité pour la connexion. Côté authentification, renseigner
+`NEXTAUTH_SECRET` (clé de signature des sessions) et `NEXTAUTH_URL`.
+
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/mdd_db?schema=public"
-AUTH_SECRET="your-secret-key-here-change-in-production"
-AUTH_URL="http://localhost:3000"
+DATABASE_USER='mdd'
+DATABASE_PASSWORD='mddpass'
+DATABASE_PORT='5432'
+DATABASE_NAME='mdd'
+DATABASE_URL="postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@localhost:${DATABASE_PORT}/${DATABASE_NAME}?schema=public"
+
+NEXTAUTH_SECRET="your-secret-key-here-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
 ```
 
-3. Initialiser la base de données :
+## Base de données
+
+Démarrer le conteneur PostgreSQL défini dans `docker-compose.yml` :
+
 ```bash
-npx prisma generate
-npx prisma db push
+docker compose up -d
 ```
 
-### Lancement
+Appliquer les migrations, puis charger les données de démonstration :
+
+```bash
+npx prisma migrate deploy
+npm run seed
+```
+
+Le seed n'est pas qu'un confort : le MVP n'ayant pas de back-office, les thèmes
+sont créés exclusivement par le seed. Sans lui, aucun thème n'existe — donc
+impossible de s'abonner ou de publier un article.
+
+En développement, `npx prisma migrate dev` régénère le client Prisma, applique
+les migrations **et déclenche automatiquement le seed** : une seule commande
+suffit, le `npm run seed` ci-dessus devient alors redondant.
+
+## Lancer l'application
 
 ```bash
 npm run dev
 ```
 
-L'application sera accessible sur [http://localhost:3000](http://localhost:3000).
+L'application est servie sur [http://localhost:3000](http://localhost:3000).
 
-## Tech Stack
+## Tests
 
-- **Framework**: Next.js 16 (App Router)
-- **Langage**: TypeScript 5
-- **UI**: shadcn/ui + Tailwind CSS 4
-- **Base de données**: PostgreSQL
-- **ORM**: Prisma
-- **Validation**: Zod
-
-## Features
-
-- Authentification utilisateur (inscription/connexion)
-- Gestion de profil
-- Abonnement à des thèmes
-- Publication d'articles
-- Commentaires sur articles
-- Fil d'actualité personnalisé
-
-## Project Structure
-
-```
-P5-DFSJS/
-├── app/               # App Router (Next.js 16)
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/        # Composants UI (shadcn/ui)
-│   └── ui/
-├── lib/               # Utilitaires
-│   └── utils.ts
-├── prisma/            # Database schema
-│   └── schema.prisma
-├── public/            # Static files
-└── package.json
+```bash
+npm run test              # tests unitaires (Vitest)
+npm run test:integration  # tests d'intégration sur PostgreSQL jetable (Testcontainers)
+npm run test:coverage     # tests unitaires avec rapport de couverture
 ```
 
-## Documentation
+Les tests d'intégration nécessitent un démon Docker disponible (ils
+provisionnent leur propre base).
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs)
+## Scripts npm
 
-## License
+| Script | Rôle |
+| :---- | :---- |
+| `npm run dev` | Serveur de développement |
+| `npm run build` | Build de production |
+| `npm run start` | Sert le build de production |
+| `npm run lint` | Analyse ESLint |
+| `npm run seed` | Charge les données de démonstration (`prisma/seed.ts`) |
+| `npm run test` | Tests unitaires |
+| `npm run test:watch` | Tests unitaires en mode watch |
+| `npm run test:integration` | Tests d'intégration |
+| `npm run test:coverage` | Couverture de tests |
+| `npm run test:e2e` | Tests end-to-end |
+| `npm run test:e2e:ui` | Playwright en mode interactif |
+| `npm run test:e2e:report` | Ouvre le dernier rapport Playwright |
+| `npm run test:lighthouse` | Audits Lighthouse |
 
-MIT License
+## Organisation du code
+
+```
+src/
+├── app/                 # App Router (Next.js 16)
+│   ├── api/             # Routes API (NextAuth)
+│   ├── article/         # Consultation et création d'articles
+│   ├── feed/            # Fil d'actualité
+│   ├── topics/          # Thèmes
+│   ├── profile/         # Profil utilisateur
+│   ├── login/ register/ # Connexion et inscription
+│   └── components/      # Composants d'interface (dont ui/ = primitives maison)
+├── lib/                 # Logique métier, un dossier par domaine
+│   ├── articles/
+│   ├── comments/
+│   ├── subscriptions/
+│   ├── topics/
+│   └── users/
+├── errors/              # Erreurs applicatives
+└── types/               # Types partagés
+prisma/                  # Schéma, migrations et seed
+```
+
+Chaque domaine de `src/lib` suit le même découpage en trois fichiers :
+`*.dto.ts` (schémas Zod et types), `*.service.ts` (logique métier) et
+`*.repository.ts` (accès aux données via Prisma).
+
+## Fonctionnalités
+
+- Inscription et connexion par e-mail **ou** nom d'utilisateur, session
+  persistante
+- Consultation et modification du profil
+- Fil d'actualité alimenté par les abonnements, triable par date
+- Liste des thèmes, abonnement et désabonnement
+- Publication et lecture d'articles
+- Commentaires sur les articles (non récursifs)
+
+## Documentation et références
+
+Documentation interne du projet : `DOCUMENTATION.md` (technique et choix).
+
+Documentations officielles des technologies retenues :
+
+- [TypeScript](https://www.typescriptlang.org/docs/)
+- [Next.js](https://nextjs.org/docs) — [React](https://react.dev/learn)
+- [PostgreSQL](https://www.postgresql.org/docs/)
+- [Prisma](https://www.prisma.io/docs)
+- [Zod](https://zod.dev/)
+- [NextAuth.js](https://next-auth.js.org/getting-started/introduction)
+- [Tailwind CSS](https://tailwindcss.com/docs)
