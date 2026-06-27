@@ -15,7 +15,7 @@ export const buttonVariants = cva(
                 blackOutline:
                     "border-2 border-black text-black hover:bg-black hover:text-white",
                 muted:
-                    "bg-muted-foreground/70 text-background",
+                    "bg-muted-foreground text-background",
             },
             size: {
                 default: "px-6 py-3",

@@ -1,5 +1,5 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.7**\
+Version : **0.0.8**\
 Date : **27/06/2026**
 
 # Documentation et rapport du projet MDD
@@ -312,9 +312,59 @@ Les interfaces sont documentées et illustrées dans la documentation (ex : capt
 *Exemple : "Après audit Lighthouse, la performance est passée de 65 à 95/100 grâce à l'utilisation du composant
 Next/Image et au rendu statique partiel (PPR)."*
 
+<a id="accessibilite"></a>
+
+### 3.3 Accessibilité
+
+L'accessibilité a été mesurée via les audits **Lighthouse** (catégorie *Accessibility*) et **Wave**
+complétés par un test manuel de la **navigation au clavier** sur les parcours
+principaux. L'audit initial plafonnait à **96/100** ; les corrections décrites
+ci-dessous ont permis d'atteindre **100/100**. Des erreurs dans Wave ont été relevées. Les corrections
+ont permis d'atteindre **10/10** sur toutes les pages
+
+#### Points relevés
+
+* **Piège au clavier absent sur le menu mobile** : une fois le panneau de
+  navigation (burger) ouvert, la tabulation pouvait s'échapper vers le contenu
+  situé derrière l'overlay, alors que ce contenu était visuellement masqué. Le
+  focus se « perdait » hors du dialogue, en infraction avec les critères WCAG
+  *2.1.2 (No Keyboard Trap)* et *2.4.3 (Focus Order)*.
+* **Éléments focusables dans une zone masquée** : le panneau, maintenu monté pour
+  l'animation de glissement, conservait ses liens dans l'ordre de tabulation même
+  fermé
+* **Fermeture du menu peu accessible** : le panneau ne proposait pas de commande
+  de fermeture explicite et clairement atteignable au clavier.
+* **Champs sans labels** : la maquette ne prévoyait pas de labels sur les champs
+  de rédaction des articles et commentaires.
+
+#### Actions correctives appliquées
+
+* **Piège à focus** : le panneau est désormais un véritable dialogue modal
+  (`role="dialog"`, `aria-modal="true"`) dont le focus clavier est confiné par la
+  bibliothèque **`focus-trap-react`**. Tant que le menu est ouvert, `Tab` /
+  `Shift+Tab` bouclent à l'intérieur ; le focus entre dans le panneau à l'ouverture
+  et revient au bouton burger à la fermeture. Les touches *Échap* et un clic sur
+  l'overlay le referment.
+* **Mise à l'écart de la zone fermée** : le bricolage `tabIndex` conditionnel par
+  élément est remplacé par l'attribut `inert` posé sur le conteneur lorsque le menu
+  est fermé, le retirant d'un seul tenant du clavier, des clics et de l'arbre
+  d'accessibilité.
+* **Bouton de fermeture explicite** : ajout d'une croix (`aria-label="Fermer le
+  menu"`, `aria-keyshortcuts="Escape"`) en tête du panneau, et annonce de l'état du
+  burger via `aria-expanded` / `aria-haspopup="dialog"`.
+* **Lien de navigation redondant** : un item pointant vers la page courante est
+  désormais rendu comme un `<span aria-current="page">` non cliquable plutôt qu'un
+  lien vers soi-même (suppression de l'alerte *redundant link* de WAVE et
+  signalement de la position courante aux lecteurs d'écran).
+* **Labels de formulaire** : les champs du formulaire de rédaction d'article
+  (thème, titre, contenu) reçoivent un `<label>` relié par `htmlFor`/`id`, en
+  complément du placeholder, supprimant l'alerte *missing form label* de WAVE.
+
+---
+
 <a id="revue-technique"></a>
 
-### 3.3 Revue technique
+### 3.4 Revue technique
 
 Synthèse critique du code à l'état actuel du projet.
 
