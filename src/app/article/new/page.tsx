@@ -10,6 +10,13 @@ import {topicsService} from "@/src/lib/topics/topics.service";
  * `ArticleForm`, qui pilote `postAction` via `useActionState`. La redirection
  * vers le détail de l'article créé est gérée par l'action elle-même.
  */
+
+// Rendu dynamique forcé : page authentifiée lisant les thèmes en base. Sans ça,
+// `next build` tente de la prérendre statiquement et échoue (base injoignable au
+// build). Contrairement aux autres pages, elle ne lit pas la session côté page,
+// donc Next ne la bascule pas en dynamique automatiquement.
+export const dynamic = "force-dynamic";
+
 export default async function NewArticlePage() {
     const topics = await topicsService.getAllTopics();
 

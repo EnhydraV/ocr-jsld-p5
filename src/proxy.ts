@@ -41,8 +41,11 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
 }
 
-// Le proxy s'exécute sur toutes les routes SAUF l'API NextAuth (sinon la requête de connexion elle-même serait bloquée)
-// et les assets statiques.
+// Le proxy s'exécute sur toutes les routes SAUF l'API NextAuth (sinon la requête de connexion elle-même serait bloquée),
+// les assets internes de Next et `logo.png`. Ce dernier est le SEUL fichier de `public/` exclu, car il s'affiche sur la
+// home déconnectée : sinon la requête non authentifiée serait redirigée vers le login et `next/image` recevrait du HTML
+// au lieu de l'image. Les autres médias de `public/` (ex. futures images d'articles) restent volontairement derrière le
+// videur pour être protégés par l'authentification.
 export const config = {
-    matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+    matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|logo\\.png).*)"],
 };

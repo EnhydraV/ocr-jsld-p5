@@ -15,10 +15,10 @@ export default function Home() {
 
             {/* Boutons empilés sur mobile, côte à côte dès `sm`. */}
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
-                <Link href="/login" className={cn(buttonVariants({variant: "blackOutline"}), "w-full sm:w-auto")}>
+                <Link href="/login" className={cn(buttonVariants({variant: "primary"}), "w-full sm:w-auto")}>
                     Se connecter
                 </Link>
-                <Link href="/register" className={cn(buttonVariants({variant: "blackOutline"}), "w-full sm:w-auto")}>
+                <Link href="/register" className={cn(buttonVariants({variant: "primary"}), "w-full sm:w-auto")}>
                     S&apos;inscrire
                 </Link>
             </div>
