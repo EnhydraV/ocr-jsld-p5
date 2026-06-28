@@ -1,6 +1,6 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.8**\
-Date : **27/06/2026**
+Version : **0.0.9**\
+Date : **28/06/2026**
 
 # Documentation et rapport du projet MDD
 
@@ -303,21 +303,82 @@ Commandes : `npm test` (unitaire), `npm run test:coverage` (couverture),
 
 ### 3.2 Rapport de performance et optimisation
 
-Décrivez les actions menées pour **améliorer la performance** du code et du rendu :
+La performance résulte d'abord des **choix d'architecture** et de l'application des
+bonnes pratiques tout au long du développement, avant toute optimisation a
+posteriori. Elle est ensuite **vérifiée en continu** par des audits Lighthouse
+automatisés.
 
-* résultats d'audit (Lighthouse, Vercel Analytics, etc.),
-* points d'amélioration identifiés,
-* actions correctives appliquées.
-* accessibilité (aria-label), wave ?
+#### Audits Lighthouse automatisés
 
-Qualité et conformité réglementaire des interfaces front-end
+Une suite dédiée (Playwright + `playwright-lighthouse`, commande
+`npm run test:lighthouse`) audite **sept pages** — accueil, connexion, inscription,
+fil, thèmes, rédaction d'article, profil — chacune en **desktop et en mobile**,
+soit quatorze audits. Les quatre catégories (performance, accessibilité, bonnes
+pratiques, SEO) sont mesurées, mais seul le **score d'accessibilité est bloquant** :
+un test échoue si une page repasse sous le seuil, exactement comme un test
+classique. Les trois autres catégories sont informatives — la performance en
+particulier dépend trop de la machine d'exécution pour servir de garde-fou. Les
+rapports HTML/JSON sont produits dans `lighthouse-report/` et un tableau
+récapitulatif est affiché en fin de run. Le détail accessibilité est en §3.3.
 
-Le code respecte les règles d’accessibilité web (ex : ARIA, contrastes, navigation clavier).
-Les composants respectent les bonnes pratiques de qualité et de sécurité.
-Les interfaces sont documentées et illustrées dans la documentation (ex : captures d’écran, composants clés identifiés).
+#### Optimisations en place
 
-*Exemple : "Après audit Lighthouse, la performance est passée de 65 à 95/100 grâce à l'utilisation du composant
-Next/Image et au rendu statique partiel (PPR)."*
+* **Rendu côté serveur par défaut** : les lectures (fil, thèmes, profil, détail
+  d'article) sont des **Server Components**. Le HTML arrive prêt à afficher et le
+  JavaScript envoyé au navigateur reste minimal — seuls les éléments interactifs
+  (formulaires, menu) sont des Client Components.
+* **Invalidation ciblée du cache** : les mutations passent par des Server Actions
+  qui appellent `revalidatePath` sur les seules routes concernées (`/feed`,
+  `/topics`, `/profile`) plutôt que de forcer un rechargement complet côté client.
+  `force-dynamic` n'est posé que là où c'est nécessaire (rédaction d'article).
+* **Polices auto-hébergées** : `next/font` (Geist) sert les polices depuis le
+  domaine de l'app — pas de requête tierce, pas de décalage de mise en page (CLS).
+* **Images optimisées** : le logo passe par `next/image` (formats modernes,
+  dimensions explicites, chargement maîtrisé).
+
+#### Point d'amélioration identifié
+
+* **Charge utile du fil** : `ArticleCard` tronque l'extrait *à l'affichage* via
+  `line-clamp-4` (CSS), mais le contenu intégral de chaque article transite dans le
+  HTML. Acceptable au volume du seed ; à remplacer par un extrait borné calculé
+  côté serveur si la volumétrie augmente (cf. revue technique §3.4).
+
+#### Résultats Lighthouse
+
+Sur le poste de développement (`npm run build && npm run start`, base semée), les
+sept pages atteignent **100/100 dans les quatre catégories**, en desktop comme en
+mobile.
+
+| Catégorie        | Score        |
+|:-----------------|:-------------|
+| Performance      | **100** /100 |
+| Accessibilité    | **100** /100 |
+| Bonnes pratiques | **100** /100 |
+| SEO              | **100** /100 |
+
+#### Portée et limites de ces scores
+
+Un score de 100 est un bon indicateur, pas une garantie absolue ; il faut le lire
+pour ce qu'il est :
+
+* **Données de laboratoire, pas de terrain** : Lighthouse mesure un chargement
+  *synthétique*, sur une machine et un profil de bridage donnés. Il ne reflète pas
+  l'expérience réelle des utilisateurs (diversité des réseaux, des appareils, état
+  du cache) que livreraient des données de terrain type CrUX.
+* **Variabilité** : les scores fluctuent d'un run à l'autre (bridage CPU, charge de
+  la machine, aléa réseau). Les nôtres sont relevés en local, sur un volume de seed
+  limité, dans des conditions favorables.
+* **Audit partiel, surtout en accessibilité** : les vérifications automatiques ne
+  couvrent qu'une partie des critères WCAG. 100/100 ne dispense pas du test manuel
+  (navigation clavier, lecteur d'écran) — d'où le complément WAVE + clavier décrit
+  en §3.3.
+* **Catégories heuristiques** : « bonnes pratiques » et « SEO » sont des check-lists ;
+  un 100 signale l'absence de signaux négatifs connus, pas une optimisation
+  exhaustive.
+
+En résumé, ces audits servent surtout de **garde-fou contre les régressions** — et
+de façon bloquante pour l'accessibilité — plus que de preuve de performance en
+production.
 
 <a id="accessibilite"></a>
 
@@ -401,8 +462,6 @@ Synthèse critique du code à l'état actuel du projet.
 * **Course résiduelle (TOCTOU)** : le pré-check d'existence de la relation dans
   `addArticle` / `addComment` laisse une fenêtre entre la vérification et
   l'insertion. La contrainte de clé étrangère en base reste le garde-fou réel.
-* **Politique de mot de passe** : la borne `max(20)` est un héritage à
-  questionner ; elle n'apporte rien sur le plan de la sécurité.
 
 #### Actions correctives appliquées
 
@@ -433,7 +492,8 @@ R : Cliquez sur "S'inscrire", remplissez le formulaire et validez. Vous serez au
 
 Q : Que faire si l'application ne charge pas ?
 
-R : Rafraîchissez la page. Si le problème persiste, vérifiez votre connexion ou contactez le support technique.
+R : Rafraîchissez la page. Si le problème persiste, vérifiez votre connexion ou
+contactez le support technique.
 
 <a id="supervision-ia"></a>
 
@@ -442,15 +502,17 @@ R : Rafraîchissez la page. Si le problème persiste, vérifiez votre connexion 
 Décrivez les tâches confiées à l'IA ou à des collaborateurs juniors, et comment vous avez **revérifié, validé ou corrigé
 ** leur travail.
 
-| Tâche déléguée                                                                                                                                                                                                                                     | Outil / collaborateur | Objectif                                                                                                                                      | Vérification effectuée                                                                                                                                                                                                                                                                                                                                                                                |
-|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|:----------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Mise en place de la documentation (sommaire cliquable, ancres PDF-compatibles, fichiers de suivi)                                                                                                                                                  | Claude                | Documentation navigable et traçabilité du projet                                                                                              | Ouverture de `DOCUMENTATION.md` sur GitHub, test de chaque lien du sommaire et relecture du contenu généré                                                                                                                                                                                                                                                                                            |
-| Revue critique du tableau des choix techniques (complétude, justifications, ordre, coquilles)                                                                                                                                                      | Claude                | Crédibiliser la section « Choix techniques »                                                                                                  | Validation point par point des remarques, arbitrage des reformulations conservées et relecture du tableau final                                                                                                                                                                                                                                                                                       |
-| Génération des diagrammes ERD et d'archtecture                                                                                                                                                                                                     | Claude                | Réalisation de diagrammes compatibles avec mon IDE et Github dans la documentation                                                            | Validation de la suggestion du format mermaid, vérification de la cohérence et lisibilité des diagrammes                                                                                                                                                                                                                                                                                              |
-| Rédaction des données de démonstration du seed (6 utilisateurs, 63 articles de 3 paragraphes, 3 commentaires par article)                                                                                                                          | Claude                | Disposer d'un jeu de données réaliste pour développer et tester le fil et le détail d'un article                                              | Vérification des champs face à `schema.prisma`, contrôle de l'idempotence (upsert users + purge/recréation articles et commentaires), respect de la règle « commentaires postés par des non-auteurs distincts », conformité du mot de passe de dev à la politique du brief et relecture du contenu rédigé                                                                                             |
-| Intégration des pages connectées sur la couche métier : `/topics`, `/profile`, `/feed` puis détail d'article `/article/[id]` (lecture + formulaire de commentaire) et primitives associées (`AccountForm`, `ArticleCard`, `TopicCard`, `Textarea`) | Claude                | Brancher le front sur les services et Server Actions déjà en place                                                                            | Relecture du flux `getArticleById` → rendu → `commentAction.bind()`, confrontation à la maquette, contrôle du `notFound()` sur id invalide/article absent et de l'ordre des arguments liés `(articleId, prev, formData)`, cohérence des lectures avec le tableau des server actions                                                                                                                   |
-| Mise en place de la suite de tests Vitest (unitaires + intégration) sur la couche serveur                                                                                                                                                          | Claude                | Tester la logique métier et atteindre le seuil de couverture de 75 %                                                                          | Exécution de `npm run test:coverage` (75 tests au vert, ~99 % stmts / 81 % branches) et `tsc --noEmit` sans erreur ; relecture des assertions face au comportement attendu (codes 401/404/409, mot de passe haché jamais en clair, identité issue de la session, double abonnement sans doublon) ; vérification que les tests d'intégration ciblent bien le conteneur Postgres et non le `.env` local |
-| Rédaction du README.md sur la base du template proposé                                                                                                                                                                                             | Claude                | Résumer le contenu du projet et donner les commandes et opération principales permettant de lancer le projet et de reprendre le développement | Confrontation de chaque section au code réel (`package.json`, `docker-compose.yml`, `.env.example`, `prisma.config.ts`, arborescence `src/`), test des procédures mentionnées                                                                                                                                                                                                                         |
+| Tâche déléguée                                                                                                                                                                                                                                     | Outil / collaborateur | Objectif                                                                                                                                         | Vérification effectuée                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Mise en place de la documentation (sommaire cliquable, ancres PDF-compatibles, fichiers de suivi)                                                                                                                                                  | Claude                | Documentation navigable et traçabilité du projet                                                                                                 | Ouverture de `DOCUMENTATION.md` sur GitHub, test de chaque lien du sommaire et relecture du contenu généré                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Revue critique du tableau des choix techniques (complétude, justifications, ordre, coquilles)                                                                                                                                                      | Claude                | Crédibiliser la section « Choix techniques »                                                                                                     | Validation point par point des remarques, arbitrage des reformulations conservées et relecture du tableau final                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Génération des diagrammes ERD et d'archtecture                                                                                                                                                                                                     | Claude                | Réalisation de diagrammes compatibles avec mon IDE et Github dans la documentation                                                               | Validation de la suggestion du format mermaid, vérification de la cohérence et lisibilité des diagrammes                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Rédaction des données de démonstration du seed (6 utilisateurs, 63 articles de 3 paragraphes, 3 commentaires par article)                                                                                                                          | Claude                | Disposer d'un jeu de données réaliste pour développer et tester le fil et le détail d'un article                                                 | Vérification des champs face à `schema.prisma`, contrôle de l'idempotence (upsert users + purge/recréation articles et commentaires), respect de la règle « commentaires postés par des non-auteurs distincts », conformité du mot de passe de dev à la politique du brief et relecture du contenu rédigé                                                                                                                                                                                                         |
+| Intégration des pages connectées sur la couche métier : `/topics`, `/profile`, `/feed` puis détail d'article `/article/[id]` (lecture + formulaire de commentaire) et primitives associées (`AccountForm`, `ArticleCard`, `TopicCard`, `Textarea`) | Claude                | Brancher le front sur les services et Server Actions déjà en place                                                                               | Relecture du flux `getArticleById` → rendu → `commentAction.bind()`, confrontation à la maquette, contrôle du `notFound()` sur id invalide/article absent et de l'ordre des arguments liés `(articleId, prev, formData)`, cohérence des lectures avec le tableau des server actions                                                                                                                                                                                                                               |
+| Mise en place de la suite de tests Vitest (unitaires + intégration) sur la couche serveur                                                                                                                                                          | Claude                | Tester la logique métier et atteindre le seuil de couverture de 75 %                                                                             | Exécution de `npm run test:coverage` (75 tests au vert, ~99 % stmts / 81 % branches) et `tsc --noEmit` sans erreur ; relecture des assertions face au comportement attendu (codes 401/404/409, mot de passe haché jamais en clair, identité issue de la session, double abonnement sans doublon) ; vérification que les tests d'intégration ciblent bien le conteneur Postgres et non le `.env` local                                                                                                             |
+| Mise en place de la suite de tests end-to-end Playwright (16 scénarios) sur les parcours critiques du brief                                                                                                                                        | Claude                | Valider le comportement réel de l'application de bout en bout (UI → Server Actions → base)                                                       | Cartographie préalable de l'UI réelle pour des sélecteurs accessibles (`getByRole`/`getByLabel`/placeholder), validation du parsing des specs (`playwright test --list`, 16 tests) et `tsc --noEmit` sans erreur ; relecture de chaque scénario face aux libellés/routes/bannières exacts des composants ; contrôle du seed déterministe, isolation des données mutées, et garde-fou `E2E_DATABASE_URL` obligatoire (base jetable distincte de la dev) ; exécution complète de la suite sur un PostgreSQL jetable |
+| Rédaction du README.md sur la base du template proposé                                                                                                                                                                                             | Claude                | Résumer le contenu du projet et donner les commandes et opération principales permettant de lancer le projet et de reprendre le développement    | Confrontation de chaque section au code réel (`package.json`, `docker-compose.yml`, `.env.example`, `prisma.config.ts`, arborescence `src/`), test des procédures mentionnées                                                                                                                                                                                                                                                                                                                                     |
+| Mise en place de l'automatisation des mesures de performance lighthouse avec Playwright                                                                                                                                                            | Claude                | Automatiser les mesures pour repérer plus facilement les régressions des mesures                                                                    | Test de la commande, vérification de la cohérence du résultat avec les résultats observés dans Chrome. Elargissement du scope des tests (perf, mobile)                                                                                                                                                                                                                                                                                                                                                            |
 
 ---
 

@@ -24,7 +24,6 @@ type NavItemProps = {
     activeClassName?: string;
     /** Classes ajoutées quand l'item est cliquable (inactif). */
     inactiveClassName?: string;
-    "aria-label"?: string;
     onClick?: () => void;
     children: ReactNode;
 };
@@ -35,16 +34,16 @@ type NavItemProps = {
  * non cliquable. Cela supprime le lien redondant vers soi-même (signalé par WAVE)
  * et annonce sa position actuelle aux lecteurs d'écran.
  */
-function NavItem({href, active, className, activeClassName, inactiveClassName, onClick, children, ...rest}: NavItemProps) {
+function NavItem({href, active, className, activeClassName, inactiveClassName, onClick, children}: NavItemProps) {
     if (active) {
         return (
-            <span aria-current="page" className={cn(className, activeClassName)} {...rest}>
+            <span aria-current="page" className={cn(className, activeClassName)}>
                 {children}
             </span>
         );
     }
     return (
-        <Link href={href} onClick={onClick} className={cn(className, inactiveClassName)} {...rest}>
+        <Link href={href} onClick={onClick} className={cn(className, inactiveClassName)}>
             {children}
         </Link>
     );
@@ -86,12 +85,12 @@ export default function HeaderNav() {
                 <NavItem
                     href="/profile"
                     active={isActive("/profile")}
-                    aria-label="Mon profil"
                     className="flex size-9 items-center justify-center rounded-full bg-muted transition-colors"
                     activeClassName="text-primary"
                     inactiveClassName="text-foreground hover:text-primary"
                 >
                     <User className="size-5"/>
+                    <span className="sr-only">Mon profil</span>
                 </NavItem>
             </nav>
 
@@ -143,7 +142,9 @@ export default function HeaderNav() {
                         clickOutsideDeactivates: true,
                     }}
                 >
-                    <nav
+                    {/* Conteneur générique (et non `<nav>`) : le rôle `dialog`
+                        est interdit sur `<nav>` (axe « aria-allowed-role »). */}
+                    <div
                         role="dialog"
                         aria-modal="true"
                         aria-label="Menu de navigation"
@@ -180,15 +181,15 @@ export default function HeaderNav() {
                         <NavItem
                             href="/profile"
                             active={isActive("/profile")}
-                            aria-label="Mon profil"
                             onClick={() => setOpen(false)}
                             className="mt-auto flex size-9 items-center justify-center rounded-full bg-muted transition-colors"
                             activeClassName="text-primary"
                             inactiveClassName="text-foreground hover:text-primary"
                         >
                             <User className="size-5"/>
+                            <span className="sr-only">Mon profil</span>
                         </NavItem>
-                    </nav>
+                    </div>
                 </FocusTrap>
             </div>
         </>

@@ -4,14 +4,16 @@ import {playAudit} from "playwright-lighthouse";
 import {test} from "./lighthouse.fixtures";
 
 /**
- * Audits d'accessibilité automatisés (Lighthouse).
+ * Audits Lighthouse automatisés (desktop ET mobile : chaque page est auditée
+ * dans les deux facteurs de forme).
  *
  * Chaque page ciblée est auditée par Lighthouse, qui se connecte au Chrome de
  * debug ouvert par la fixture `port`. Le score d'accessibilité est BLOQUANT
  * (seuil ci-dessous) : un test échoue si la page repasse sous le seuil, comme un
- * test classique. `best-practices` et `seo` sont mesurés et présents dans les
- * rapports, mais non bloquants (absents des `thresholds`). La performance est
- * volontairement exclue : trop dépendante de la machine pour servir de garde-fou.
+ * test classique. `performance`, `best-practices` et `seo` sont mesurés et
+ * présents dans les rapports, mais NON bloquants (absents des `thresholds`) : la
+ * performance en particulier dépend trop de la machine pour servir de garde-fou.
+ * Les quatre scores sont récapitulés dans un tableau en fin de run (`afterAll`).
  *
  * Les rapports HTML/JSON sont écrits dans `lighthouse-report/` (ignoré par git).
  */
@@ -40,9 +42,10 @@ function authCookieHeader(): string {
 }
 
 /**
- * Configuration Lighthouse « desktop » : on aligne le facteur de forme et
- * l'émulation d'écran sur le `Desktop Chrome` utilisé par le reste des e2e,
- * plutôt que sur le mobile (défaut de Lighthouse).
+ * Configuration Lighthouse « desktop » : facteur de forme et émulation d'écran
+ * alignés sur le `Desktop Chrome` du reste des e2e, plus le throttling « desktop »
+ * officiel (réseau rapide, pas de bridage CPU) — sans quoi le score de performance
+ * desktop serait calculé avec le bridage mobile par défaut, donc faussé.
  */
 const desktopConfig: NonNullable<AuditConfig["config"]> = {
     extends: "lighthouse:default",
@@ -55,8 +58,41 @@ const desktopConfig: NonNullable<AuditConfig["config"]> = {
             deviceScaleFactor: 1,
             disabled: false,
         },
+        throttling: {
+            rttMs: 40,
+            throughputKbps: 10 * 1024,
+            cpuSlowdownMultiplier: 1,
+            requestLatencyMs: 0,
+            downloadThroughputKbps: 0,
+            uploadThroughputKbps: 0,
+        },
     },
 };
+
+/**
+ * Configuration Lighthouse « mobile » : facteur de forme mobile et écran émulé
+ * type smartphone. Le throttling (réseau lent + CPU ×4) est laissé au défaut de
+ * `lighthouse:default`, qui est précisément le profil mobile de référence.
+ */
+const mobileConfig: NonNullable<AuditConfig["config"]> = {
+    extends: "lighthouse:default",
+    settings: {
+        formFactor: "mobile",
+        screenEmulation: {
+            mobile: true,
+            width: 412,
+            height: 823,
+            deviceScaleFactor: 1.75,
+            disabled: false,
+        },
+    },
+};
+
+/** Facteurs de forme audités : chaque page est mesurée en desktop ET en mobile. */
+const FORM_FACTORS: {name: string; config: NonNullable<AuditConfig["config"]>}[] = [
+    {name: "desktop", config: desktopConfig},
+    {name: "mobile", config: mobileConfig},
+];
 
 /** Pages auditées. `auth` indique si la session connectée est nécessaire. */
 const TARGETS: {name: string; path: string; auth: boolean}[] = [
@@ -69,29 +105,58 @@ const TARGETS: {name: string; path: string; auth: boolean}[] = [
     {name: "profile", path: "/profile", auth: true},
 ];
 
-for (const target of TARGETS) {
-    test(`accessibilité — ${target.path}`, async ({port}) => {
-        const opts: NonNullable<AuditConfig["opts"]> = {
-            onlyCategories: ["accessibility", "best-practices", "seo"],
-        };
-        // Pages privées : on réinjecte la session via l'en-tête Cookie.
-        if (target.auth) {
-            opts.extraHeaders = {Cookie: authCookieHeader()};
-        }
+/** Scores collectés au fil des audits, pour le récapitulatif final. */
+type CategoryScores = {performance: number; accessibility: number; bestPractices: number; seo: number};
+const summary: Record<string, CategoryScores> = {};
 
-        await playAudit({
-            url: `${BASE_URL}${target.path}`,
-            port,
-            thresholds: {accessibility: ACCESSIBILITY_THRESHOLD},
-            opts,
-            config: desktopConfig,
-            reports: {
-                formats: {html: true, json: true},
-                directory: REPORTS_DIR,
-                name: target.name,
-            },
-            ignoreBrowserName: true,
-            disableLogs: true,
-        });
-    });
+/** Score Lighthouse (0–1, parfois `null`) ramené sur 100. */
+function toScore(score: number | null | undefined): number {
+    return Math.round((score ?? 0) * 100);
 }
+
+for (const factor of FORM_FACTORS) {
+    for (const target of TARGETS) {
+        test(`audit Lighthouse — ${factor.name} — ${target.path}`, async ({port}) => {
+            const opts: NonNullable<AuditConfig["opts"]> = {
+                onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
+            };
+            // Pages privées : on réinjecte la session via l'en-tête Cookie.
+            if (target.auth) {
+                opts.extraHeaders = {Cookie: authCookieHeader()};
+            }
+
+            const {lhr} = await playAudit({
+                url: `${BASE_URL}${target.path}`,
+                port,
+                thresholds: {accessibility: ACCESSIBILITY_THRESHOLD},
+                opts,
+                config: factor.config,
+                reports: {
+                    formats: {html: true, json: true},
+                    directory: REPORTS_DIR,
+                    // Suffixe le form factor pour ne pas écraser le rapport de l'autre.
+                    name: `${target.name}-${factor.name}`,
+                },
+                ignoreBrowserName: true,
+                disableLogs: true,
+            });
+
+            // On mémorise les 4 scores (perf/seo/bonnes pratiques non bloquants) pour le récap.
+            const {categories} = lhr;
+            summary[`${target.path} [${factor.name}]`] = {
+                performance: toScore(categories.performance?.score),
+                accessibility: toScore(categories.accessibility?.score),
+                bestPractices: toScore(categories["best-practices"]?.score),
+                seo: toScore(categories.seo?.score),
+            };
+        });
+    }
+}
+
+// Récapitulatif lisible des scores en fin de run. Seul `accessibility` est
+// bloquant (cf. seuil) ; les autres colonnes sont purement informatives.
+test.afterAll(() => {
+    if (Object.keys(summary).length === 0) return;
+    console.log("\nScores Lighthouse (desktop + mobile) — accessibilité bloquante, le reste informatif :");
+    console.table(summary);
+});

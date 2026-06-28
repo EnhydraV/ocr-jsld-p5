@@ -1,10 +1,15 @@
 import {defineConfig, devices} from "@playwright/test";
 import {loadEnvConfig} from "@next/env";
+import dotenv from "dotenv";
 
 // Charge le .env comme Next.js (interpolation des ${...}) pour disposer de
 // DATABASE_URL côté global-setup. E2E_DATABASE_URL permet de viser une base
 // jetable distincte de celle de dev (le global-setup la VIDE avant de semer).
 loadEnvConfig(process.cwd());
+// @next/env ne connaît que les fichiers standards (.env, .env.local, ...) : il
+// ignore .env.e2e. On le charge donc explicitement pour récupérer E2E_DATABASE_URL.
+// dotenv n'écrase pas les variables déjà présentes (un export manuel reste prioritaire).
+dotenv.config({path: ".env.e2e"});
 
 // Sécurité : on EXIGE E2E_DATABASE_URL (base jetable). Le global-setup VIDE la
 // base ciblée — pas question de retomber silencieusement sur DATABASE_URL et
