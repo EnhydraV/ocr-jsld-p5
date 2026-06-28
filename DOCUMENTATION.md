@@ -1,5 +1,5 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.9**\
+Version : **0.0.17**\
 Date : **28/06/2026**
 
 # Documentation et rapport du projet MDD
@@ -16,11 +16,15 @@ Date : **28/06/2026**
 3. [Tests, performance et qualité](#tests-qualite)
     1. [Stratégie de test](#strategie-test)
     2. [Rapport de performance et optimisation](#performance)
-    3. [Revue technique](#revue-technique)
+    3. [Accessibilité](#accessibilite)
+    4. [Revue technique](#revue-technique)
 4. [Documentation utilisateur et supervision](#documentation-utilisateur)
     1. [FAQ utilisateur](#faq)
     2. [Supervision et tâches déléguées à l'IA](#supervision-ia)
 5. [Annexes](#annexes)
+    1. [Captures d'écran de l'UI](#annexes-captures)
+    2. [Rapports de tests](#annexes-rapports)
+    3. [Autres pièces justificatives](#annexes-autres)
 
 ---
 
@@ -44,7 +48,8 @@ est abonné, dans l'ordre chronologique. Il sera par ailleurs possible de commen
 
 ### 1.2 Périmètre fonctionnel
 
-Présentez les **fonctionnalités livrées** (liste synthétique), en précisant leur état (terminée / en cours / à venir).
+Les **fonctionnalités livrées** du MVP et leur état d'avancement. L'ensemble du
+périmètre fonctionnel défini par le brief est terminé.
 
 | Fonctionnalités                            | Description                                                                                                                                        | Statut   |
 |:-------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------|:---------|
@@ -55,10 +60,10 @@ Présentez les **fonctionnalités livrées** (liste synthétique), en précisant
 | **Modifier ses informations de connexion** | Modifier email, nom d'utilisateur et mot de passe                                                                                                  | Terminée |
 | **Liste des thèmes**                       | Afficher la liste des thèmes et leur status "abonné" pour l'utilisateur                                                                            | Terminée |
 | **Abonnement/Désabonnement à un thème**    | Dans le profil utilisateur, se désabonner d'un thème. Dans la liste des thème s'abonner/se désabonner des thème                                    | Terminée |
-| **Rédiger un article**                     | Ecrire un article associé à un thème                                                                                                               |          |
+| **Rédiger un article**                     | Ecrire un article associé à un thème                                                                                                               | Terminée |
 | **Lire le fil d'actualités**               | Lister les articles associés aux thèmes auxquels l'utilisateur a souscrit. Ordonner les articles par date de publication (ascendant ou descendant) | Terminée |
-| **Lire un article**                        | Consulter un article et ses commentaires.                                                                                                          |          |
-| **Ecrire un commentaire**                  | Ecrire un commentaire associé à un article                                                                                                         |          |
+| **Lire un article**                        | Consulter un article et ses commentaires.                                                                                                          | Terminée |
+| **Ecrire un commentaire**                  | Ecrire un commentaire associé à un article                                                                                                         | Terminée |
 
 ---
 
@@ -96,7 +101,7 @@ flowchart TD
     end
 
     subgraph ext["Services externes"]
-        GH["GitHub<br/>versioning + CI/CD"]
+        GH["GitHub<br/>versioning"]
     end
 
     User -->|requête HTTP| SC
@@ -144,7 +149,7 @@ Action aujourd'hui, Route Handler demain) et testable en isolation.
 | **Zod**            | Validation                       | https://zod.dev/                                                                                                  | Validation des données                                                                                     | Simplicité et lisibilité de la syntaxe, une source de vérité (cf. z.infer)                           |
 | **NextAuth.js**    | Bibliothèque d'authentification  | https://next-auth.js.org/getting-started/introduction                                                             | Sécurisation de l'application                                                                              | Support d'un vaste choix de méthodes d'authentification (future proof)                               |
 | **Tailwind**       | Framework CSS                    | https://tailwindcss.com/docs                                                                                      | Styliser rapidement                                                                                        | Gestion du responsive, styles et composants regroupés via classes utilitaires                        |
-| **GitHub**         | Collaboration                    | https://www.github.com                                                                                            | Versionning du code, collaboration, CI                                                                     | Gratuit, standard de l'industrie                                                                     |
+| **GitHub**         | Collaboration                    | https://www.github.com                                                                                            | Versionning du code, collaboration                                                                         | Gratuit, standard de l'industrie                                                                     |
 
 <a id="api-donnees"></a>
 
@@ -247,7 +252,7 @@ un seul » côté barre, « zéro ou plusieurs » côté patte d'oie. Trait plei
 fait partie de la clé primaire) : c'est le cas de `SUBSCRIPTION`, dont la clé composite `(userId, topicId)` matérialise
 l'abonnement et interdit tout doublon. Trait pointillé = relation **non identifiante** (la clé étrangère est un simple
 attribut), pour les liens auteur et catégorie. La table `SUBSCRIPTION` porte la relation plusieurs-à-plusieurs entre
-`USER` et `TOPIC` (cf. `NOTES.md` pour la justification de ce choix).
+`USER` et `TOPIC`.
 
 ---
 
@@ -299,6 +304,26 @@ Commandes : `npm test` (unitaire), `npm run test:coverage` (couverture),
 | Test d'intégration | Vitest + Testcontainers (PostgreSQL) | Services rejoués sur vraie base (relations, contraintes, double abonnement sans doublon)                                   | 13 tests (exécution locale, Docker requis)          |
 | Test e2e           | Playwright (Chromium)                | Parcours critiques : inscription, connexion, fil + tri, abonnement, article, commentaire, profil, déconnexion, 404, mobile | 16 tests (exécution locale, Docker requis)          |
 
+**Rapport de couverture** (sortie de `npm run test:coverage`, fournisseur V8),
+par domaine de `src/lib` et `src/errors` :
+
+| Périmètre            | % Instr. | % Branches | % Fonctions | % Lignes |
+|:---------------------|:--------:|:----------:|:-----------:|:--------:|
+| **Total**            | **98,68** | **81,35** | **96,15** | **98,66** |
+| `errors`             | 100 | 100 | 100 | 100 |
+| `lib` (auth, erreurs, utils) | 100 | 93,75 | 100 | 100 |
+| `lib/articles`       | 100 | 66,66 | 100 | 100 |
+| `lib/comments`       | 100 | 80 | 100 | 100 |
+| `lib/subscriptions`  | 100 | 100 | 100 | 100 |
+| `lib/topics`         | 100 | 100 | 100 | 100 |
+| `lib/users`          | 96,15 | 77,77 | 87,5 | 96,15 |
+
+Le seuil de validation (75 % sur chaque métrique, configuré dans
+`vitest.coverage.config.ts`) est dépassé partout. Les branches non couvertes sont
+essentiellement les blocs `catch` d'erreur *inattendue* des Server Actions (chemins
+défensifs, par nature difficiles à provoquer). Le rapport HTML complet est généré
+dans `coverage/` ; une capture figure en annexe §5.
+
 <a id="performance"></a>
 
 ### 3.2 Rapport de performance et optimisation
@@ -346,15 +371,28 @@ récapitulatif est affiché en fin de run. Le détail accessibilité est en §3.
 #### Résultats Lighthouse
 
 Sur le poste de développement (`npm run build && npm run start`, base semée), les
-sept pages atteignent **100/100 dans les quatre catégories**, en desktop comme en
-mobile.
+**sept pages atteignent 100/100 dans les quatre catégories, en desktop comme en
+mobile** — soit quatorze audits. Sortie du récapitulatif de `npm run test:lighthouse` :
 
-| Catégorie        | Score        |
-|:-----------------|:-------------|
-| Performance      | **100** /100 |
-| Accessibilité    | **100** /100 |
-| Bonnes pratiques | **100** /100 |
-| SEO              | **100** /100 |
+| Page            | Facteur | Performance | Accessibilité | Bonnes pratiques | SEO |
+|:----------------|:--------|:-----------:|:-------------:|:----------------:|:---:|
+| `/`             | desktop | 100 | 100 | 100 | 100 |
+| `/login`        | desktop | 100 | 100 | 100 | 100 |
+| `/register`     | desktop | 100 | 100 | 100 | 100 |
+| `/feed`         | desktop | 100 | 100 | 100 | 100 |
+| `/topics`       | desktop | 100 | 100 | 100 | 100 |
+| `/article/new`  | desktop | 100 | 100 | 100 | 100 |
+| `/profile`      | desktop | 100 | 100 | 100 | 100 |
+| `/`             | mobile  | 100 | 100 | 100 | 100 |
+| `/login`        | mobile  | 100 | 100 | 100 | 100 |
+| `/register`     | mobile  | 100 | 100 | 100 | 100 |
+| `/feed`         | mobile  | 100 | 100 | 100 | 100 |
+| `/topics`       | mobile  | 100 | 100 | 100 | 100 |
+| `/article/new`  | mobile  | 100 | 100 | 100 | 100 |
+| `/profile`      | mobile  | 100 | 100 | 100 | 100 |
+
+Les rapports HTML détaillés correspondants sont produits dans `lighthouse-report/`
+(une capture du récapitulatif figure en annexe §5).
 
 #### Portée et limites de ces scores
 
@@ -462,6 +500,12 @@ Synthèse critique du code à l'état actuel du projet.
 * **Course résiduelle (TOCTOU)** : le pré-check d'existence de la relation dans
   `addArticle` / `addComment` laisse une fenêtre entre la vérification et
   l'insertion. La contrainte de clé étrangère en base reste le garde-fou réel.
+* **Intégration continue (CI) non outillée** : le projet est versionné sous Git,
+  mais aucun pipeline n'exécute encore automatiquement le lint, le typage et les
+  tests à chaque *push* / *pull request*. Les vérifications restent manuelles
+  (`npm run lint`, `tsc --noEmit`, `npm test`). Une CI GitHub Actions (lint + `tsc`
+  + tests unitaires sur chaque PR, l'intégration/e2e nécessitant un service
+  PostgreSQL) constituerait le prochain garde-fou anti-régression.
 
 #### Actions correctives appliquées
 
@@ -483,12 +527,34 @@ Synthèse critique du code à l'état actuel du projet.
 
 ### 4.1 FAQ utilisateur
 
-Rédigez une courte section d'aide destinée aux utilisateurs internes ou finaux. Structurez-la en format **Question /
-Réponse**.
+Section d'aide destinée aux utilisateurs internes, au format **Question / Réponse**.
 
 Q : Comment créer un compte ?
 
-R : Cliquez sur "S'inscrire", remplissez le formulaire et validez. Vous serez automatiquement connecté.
+R : Cliquez sur « S'inscrire », renseignez votre e-mail, un nom d'utilisateur et un
+mot de passe, puis validez. Vous êtes ensuite redirigé vers la page de connexion
+pour vous identifier.
+
+Q : Quelles sont les règles pour le mot de passe ?
+
+R : Au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un
+caractère spécial. Ces règles sont vérifiées côté serveur lors de l'inscription et
+de la modification du profil.
+
+Q : Mes données personnelles sont-elles protégées ?
+
+R : Oui. Nous ne stockons que le strict nécessaire au service (e-mail, nom
+d'utilisateur, mot de passe). Le mot de passe n'est **jamais** conservé en clair :
+il est haché (bcrypt) et reste illisible, y compris pour l'équipe technique. Votre
+session est protégée par un jeton signé. En cas de doute sur la sécurité de votre
+compte, changez votre mot de passe depuis votre profil.
+
+Q : Comment modifier ou faire supprimer mes informations ?
+
+R : Vous pouvez modifier votre e-mail, votre nom d'utilisateur et votre mot de
+passe à tout moment depuis la page **Profil**. Pour la suppression du compte et de
+ses données — non encore disponible en libre-service sur cette version — adressez
+votre demande au support, conformément à votre droit à l'effacement (RGPD).
 
 Q : Que faire si l'application ne charge pas ?
 
@@ -499,8 +565,9 @@ contactez le support technique.
 
 ### 4.2 Supervision et tâches déléguées à l'IA
 
-Décrivez les tâches confiées à l'IA ou à des collaborateurs juniors, et comment vous avez **revérifié, validé ou corrigé
-** leur travail.
+Tâches confiées à l'IA (assistant de codage) et manière dont leur travail a été
+**revérifié, validé ou corrigé**. Le tableau ci-dessous en synthétise les
+principales.
 
 | Tâche déléguée                                                                                                                                                                                                                                     | Outil / collaborateur | Objectif                                                                                                                                         | Vérification effectuée                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -520,10 +587,73 @@ Décrivez les tâches confiées à l'IA ou à des collaborateurs juniors, et com
 
 ## 5. Annexes
 
-Intégrez ici toutes les pièces justificatives :
+<a id="annexes-captures"></a>
 
-* **Captures d'écran de l'UI** et vues principales.
-* **Analyse des besoins front-end** (liens avec les spécifications ou maquettes).
-* **Définition des données** (schémas Prisma, types TypeScript, règles Zod).
-* **Rapports de couverture et de tests** (exports ou impressions d'écran).
-* **Rapport de revue technique** (version complète, datée et signée si applicable).
+### 5.1 Captures d'écran de l'UI
+
+Vues principales de l'application, générées automatiquement (`npm run screenshots`,
+suite Playwright dédiée), en **desktop** et **mobile** pour illustrer le responsive.
+
+| Vue | Desktop | Mobile |
+|:----|:-------:|:------:|
+| Accueil (déconnecté) | <img src="docs/screenshots/desktop/accueil.png" width="440" alt="Accueil — desktop"> | <img src="docs/screenshots/mobile/accueil.png" width="150" alt="Accueil — mobile"> |
+| Connexion | <img src="docs/screenshots/desktop/connexion.png" width="440" alt="Connexion — desktop"> | <img src="docs/screenshots/mobile/connexion.png" width="150" alt="Connexion — mobile"> |
+| Inscription | <img src="docs/screenshots/desktop/inscription.png" width="440" alt="Inscription — desktop"> | <img src="docs/screenshots/mobile/inscription.png" width="150" alt="Inscription — mobile"> |
+| Fil d'actualité | <img src="docs/screenshots/desktop/fil.png" width="440" alt="Fil d'actualité — desktop"> | <img src="docs/screenshots/mobile/fil.png" width="150" alt="Fil d'actualité — mobile"> |
+| Liste des thèmes | <img src="docs/screenshots/desktop/themes.png" width="440" alt="Thèmes — desktop"> | <img src="docs/screenshots/mobile/themes.png" width="150" alt="Thèmes — mobile"> |
+| Détail d'un article | <img src="docs/screenshots/desktop/article-detail.png" width="440" alt="Détail d'article — desktop"> | <img src="docs/screenshots/mobile/article-detail.png" width="150" alt="Détail d'article — mobile"> |
+| Rédaction d'un article | <img src="docs/screenshots/desktop/redaction-article.png" width="440" alt="Rédaction — desktop"> | <img src="docs/screenshots/mobile/redaction-article.png" width="150" alt="Rédaction — mobile"> |
+| Profil | <img src="docs/screenshots/desktop/profil.png" width="440" alt="Profil — desktop"> | <img src="docs/screenshots/mobile/profil.png" width="150" alt="Profil — mobile"> |
+
+<a id="annexes-rapports"></a>
+
+### 5.2 Rapports de tests
+
+Synthèses reproduites ici pour lecture directe ; détails et commentaires en §3.1
+(stratégie) et §3.2 (performance). Rapports HTML complets générés dans `coverage/`
+et `lighthouse-report/`.
+
+**Couverture** (`npm run test:coverage`, fournisseur V8) — seuil de validation 75 %
+sur chaque métrique, dépassé partout :
+
+| Périmètre            | % Instr. | % Branches | % Fonctions | % Lignes |
+|:---------------------|:--------:|:----------:|:-----------:|:--------:|
+| **Total**            | **98,68** | **81,35** | **96,15** | **98,66** |
+| `errors`             | 100 | 100 | 100 | 100 |
+| `lib` (auth, erreurs, utils) | 100 | 93,75 | 100 | 100 |
+| `lib/articles`       | 100 | 66,66 | 100 | 100 |
+| `lib/comments`       | 100 | 80 | 100 | 100 |
+| `lib/subscriptions`  | 100 | 100 | 100 | 100 |
+| `lib/topics`         | 100 | 100 | 100 | 100 |
+| `lib/users`          | 96,15 | 77,77 | 87,5 | 96,15 |
+
+**Lighthouse** (`npm run test:lighthouse`) — 7 pages auditées en desktop et mobile,
+**100/100 partout** :
+
+| Page            | Facteur | Performance | Accessibilité | Bonnes pratiques | SEO |
+|:----------------|:--------|:-----------:|:-------------:|:----------------:|:---:|
+| `/`             | desktop | 100 | 100 | 100 | 100 |
+| `/login`        | desktop | 100 | 100 | 100 | 100 |
+| `/register`     | desktop | 100 | 100 | 100 | 100 |
+| `/feed`         | desktop | 100 | 100 | 100 | 100 |
+| `/topics`       | desktop | 100 | 100 | 100 | 100 |
+| `/article/new`  | desktop | 100 | 100 | 100 | 100 |
+| `/profile`      | desktop | 100 | 100 | 100 | 100 |
+| `/`             | mobile  | 100 | 100 | 100 | 100 |
+| `/login`        | mobile  | 100 | 100 | 100 | 100 |
+| `/register`     | mobile  | 100 | 100 | 100 | 100 |
+| `/feed`         | mobile  | 100 | 100 | 100 | 100 |
+| `/topics`       | mobile  | 100 | 100 | 100 | 100 |
+| `/article/new`  | mobile  | 100 | 100 | 100 | 100 |
+| `/profile`      | mobile  | 100 | 100 | 100 | 100 |
+
+<a id="annexes-autres"></a>
+
+### 5.3 Autres pièces justificatives
+
+* **Analyse des besoins front-end** : [maquettes de Juana (desktop et mobile)](https://www.figma.com/design/Rflr3TVBog35BNMnn0DF09/Maquettes-MDD--desktop-et-mobile-?node-id=0-1&p=f&t=lEB8bmSebEkK3FjM-0)
+  et périmètre fonctionnel (§1.2), respectés écran par écran.
+* **Définition des données** : diagramme entité-association et contrat des Server
+  Actions (§2.3), schéma `prisma/schema.prisma` et règles de validation Zod
+  (`src/lib/**/*.dto.ts`).
+* **Rapport de revue technique** : revue critique du code (§3.4).

@@ -23,6 +23,9 @@
 # lighthouse (rapports d'audit)
 /lighthouse-report/
 
+# captures d'écran générées (annexes)
+/screenshots/
+
 # next.js
 /.next/
 /out/

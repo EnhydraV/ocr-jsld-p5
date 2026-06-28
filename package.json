@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "test:lighthouse": "playwright test --config=playwright.lighthouse.config.ts"
+    "test:lighthouse": "playwright test --config=playwright.lighthouse.config.ts",
+    "screenshots": "playwright test --config=playwright.screenshots.config.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

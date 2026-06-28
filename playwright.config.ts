@@ -56,8 +56,9 @@ export default defineConfig({
             name: "chromium",
             use: {...devices["Desktop Chrome"], storageState: "e2e/.auth/user.json"},
             dependencies: ["setup"],
-            // Les audits Lighthouse ont leur propre config (playwright.lighthouse.config.ts).
-            testIgnore: [/auth\.setup\.ts/, /lighthouse\.spec\.ts/],
+            // Les audits Lighthouse et les captures d'écran ont leurs propres configs
+            // (playwright.lighthouse.config.ts, playwright.screenshots.config.ts).
+            testIgnore: [/auth\.setup\.ts/, /lighthouse\.spec\.ts/, /screenshots\./],
         },
     ],
     webServer: {

@@ -52,6 +52,19 @@ const users = [
 
 const DEMO_PASSWORD = "Password1!";
 
+// Abonnements de démonstration. Au moins un utilisateur richement abonné
+// (victor_ships) pour un fil et un profil représentatifs ; les autres ont des
+// abonnements plus légers, pour varier les compteurs « abonnés » des thèmes.
+// Tous les thèmes ciblés possèdent des articles, afin que les fils ne soient pas vides.
+const subscriptions: Record<string, string[]> = {
+    victor_ships: ["JavaScript", "TypeScript", "Python", "Web", "DevOps", "Intelligence artificielle", "SQL", "Emploi"],
+    juliette_dev: ["JavaScript", "UI/UX", "Mobile", "CI/CD"],
+    oscar_builds: ["Go", "Rust", "C++"],
+    romeo_scripts: ["Python", "Cybersécurité", "DevOps"],
+    charlie_codes: ["Web", "JavaScript", "TypeScript"],
+    mike_thedev: ["Java", "Kotlin", "C#"],
+};
+
 // Articles de démonstration (3 paragraphes chacun). `topic`
 // L'auteur est attribué plus bas.
 const articles: { topic: string; title: string; content: string }[] = [
@@ -715,11 +728,28 @@ async function main() {
     // d'abord, contrainte de clé étrangère oblige.
     await prisma.comment.deleteMany();
     await prisma.article.deleteMany();
+    await prisma.subscription.deleteMany();
 
     // Index des thèmes par nom pour relier chaque article à son thème.
     const topicByName = new Map(
         (await prisma.topic.findMany()).map((topic) => [topic.name, topic]),
     );
+    const userByName = new Map(createdUsers.map((user) => [user.username, user]));
+
+    // Abonnements : alimente le fil et le profil des utilisateurs ciblés.
+    let subscriptionCount = 0;
+    for (const [username, topicNames] of Object.entries(subscriptions)) {
+        const user = userByName.get(username);
+        if (!user) continue;
+        for (const topicName of topicNames) {
+            const topic = topicByName.get(topicName);
+            if (!topic) {
+                throw new Error(`Thème introuvable pour l'abonnement de ${username} : ${topicName}`);
+            }
+            await prisma.subscription.create({data: {userId: user.id, topicId: topic.id}});
+            subscriptionCount++;
+        }
+    }
 
     const baseTime = Date.now();
     let articleCount = 0;
@@ -767,7 +797,7 @@ async function main() {
     }
 
     console.log(
-        `Seed terminé : ${topics.length} thèmes, ${createdUsers.length} utilisateurs, ${articleCount} articles, ${commentCount} commentaires.`,
+        `Seed terminé : ${topics.length} thèmes, ${createdUsers.length} utilisateurs, ${subscriptionCount} abonnements, ${articleCount} articles, ${commentCount} commentaires.`,
     );
 }
 

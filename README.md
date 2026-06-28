@@ -141,6 +141,7 @@ données de développement.
 | `npm run test:e2e:ui` | Playwright en mode interactif |
 | `npm run test:e2e:report` | Ouvre le dernier rapport Playwright |
 | `npm run test:lighthouse` | Audits Lighthouse |
+| `npm run screenshots` | Captures d'écran des vues principales (desktop + mobile) |
 
 ## Organisation du code
 
