@@ -111,10 +111,18 @@ L'application est servie sur [http://localhost:3000](http://localhost:3000).
 npm run test              # tests unitaires (Vitest)
 npm run test:integration  # tests d'intégration sur PostgreSQL jetable (Testcontainers)
 npm run test:coverage     # tests unitaires avec rapport de couverture
+npm run test:e2e          # tests end-to-end (Playwright, Chromium)
 ```
 
 Les tests d'intégration nécessitent un démon Docker disponible (ils
 provisionnent leur propre base).
+
+Les tests end-to-end pilotent l'application complète dans un navigateur. Ils
+**vident puis sèment la base ciblée** : ils exigent donc une variable
+`E2E_DATABASE_URL` pointant une base **jetable, distincte de la base de dev**
+(voir `.env.e2e.example`). Sans cette variable — ou si elle pointe la même base
+que `DATABASE_URL` — le lancement échoue volontairement, pour ne pas écraser les
+données de développement.
 
 ## Scripts npm
 
