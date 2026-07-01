@@ -1,6 +1,6 @@
 Auteur : **Vincent VANWAELSCAPPEL**\
-Version : **0.0.17**\
-Date : **28/06/2026**
+Version : **0.0.21**\
+Date : **30/06/2026**
 
 # Documentation et rapport du projet MDD
 
@@ -59,7 +59,7 @@ périmètre fonctionnel défini par le brief est terminé.
 | **Consulter son profil utilisateur**       | Afficher les informations associées à son compte et ses abonnements                                                                                | Terminée |
 | **Modifier ses informations de connexion** | Modifier email, nom d'utilisateur et mot de passe                                                                                                  | Terminée |
 | **Liste des thèmes**                       | Afficher la liste des thèmes et leur status "abonné" pour l'utilisateur                                                                            | Terminée |
-| **Abonnement/Désabonnement à un thème**    | Dans le profil utilisateur, se désabonner d'un thème. Dans la liste des thème s'abonner/se désabonner des thème                                    | Terminée |
+| **Abonnement/Désabonnement à un thème**    | S'abonner depuis la liste des thèmes (le bouton devient inactif « Déjà abonné ») ; se désabonner depuis le profil                                  | Terminée |
 | **Rédiger un article**                     | Ecrire un article associé à un thème                                                                                                               | Terminée |
 | **Lire le fil d'actualités**               | Lister les articles associés aux thèmes auxquels l'utilisateur a souscrit. Ordonner les articles par date de publication (ascendant ou descendant) | Terminée |
 | **Lire un article**                        | Consulter un article et ses commentaires.                                                                                                          | Terminée |
@@ -169,30 +169,34 @@ La logique serveur suit le principe de l'App Router, qui sépare nettement écri
 
 **Server Actions (mutations)**
 
-| Server Action       | Opération                      | Entrée                                               | Retour / effet                                                                          |
-|:--------------------|:-------------------------------|:-----------------------------------------------------|:----------------------------------------------------------------------------------------|
-| `registerAction`    | Inscription                    | FormData (username, email, password)                 | `redirect` `/login?registered=1` ; sinon `RegisterState` (message d'erreur)             |
-| `profileAction`     | Mise à jour du profil connecté | FormData (username, email, password optionnel)       | `ProfileState` `{success, values}` + `revalidatePath('/profile')` ; sinon état d'erreur |
-| `postAction`        | Publication d'un article       | FormData (topicId, title, content)                   | `redirect` `/article/{id}?created=1` ; sinon `PostState` (erreur)                       |
-| `commentAction`     | Ajout d'un commentaire         | `articleId` (lié via `.bind()`) + FormData (content) | `redirect` `/article/{id}?comment=1` ; sinon `CommentState` (erreur)                    |
-| `subscribeAction`   | Abonnement à un thème          | `topicId` (lié via `.bind()`)                        | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                              |
-| `unsubscribeAction` | Désabonnement d'un thème       | `topicId` (lié via `.bind()`)                        | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                              |
+| Server Action       | Opération                      | Entrée                                               | Retour / effet                                                                          | Codes d'erreur (`AppError`)                |
+|:--------------------|:-------------------------------|:-----------------------------------------------------|:----------------------------------------------------------------------------------------|:-------------------------------------------|
+| `registerAction`    | Inscription                    | FormData (username, email, password)                 | `redirect` `/login?registered=1` ; sinon `RegisterState` (message d'erreur)             | `409` (email ou username déjà pris)        |
+| `profileAction`     | Mise à jour du profil connecté | FormData (username, email, password optionnel)       | `ProfileState` `{success, values}` + `revalidatePath('/profile')` ; sinon état d'erreur | `401` ; `409` (email ou username déjà pris) |
+| `postAction`        | Publication d'un article       | FormData (topicId, title, content)                   | `redirect` `/article/{id}?created=1` ; sinon `PostState` (erreur)                       | `401`                                      |
+| `commentAction`     | Ajout d'un commentaire         | `articleId` (lié via `.bind()`) + FormData (content) | `redirect` `/article/{id}?comment=1` ; sinon `CommentState` (erreur)                    | `401` ; `404` (article inexistant)         |
+| `subscribeAction`   | Abonnement à un thème          | `topicId` (lié via `.bind()`)                        | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                              | `401`                                      |
+| `unsubscribeAction` | Désabonnement d'un thème       | `topicId` (lié via `.bind()`)                        | `void` + `revalidatePath` (`/topics`, `/feed`, `/profile`)                              | `401`                                      |
 
-Les erreurs *attendues* (Zod, `AppError`) sont traduites en message par le helper commun `toActionError`
-(`lib/actionError.ts`).
+Codes : **401** non authentifié (toute action passant par `getCurrentUserId`), **404** ressource absente, **409**
+conflit d'unicité. Ces codes proviennent d'`AppError` ; les erreurs de **validation Zod** ne portent pas de code HTTP —
+elles sont rendues directement comme message de formulaire. Le tri (Zod / `AppError` / inattendu) est centralisé dans
+le helper commun `toActionError` (`lib/actionError.ts`).
 
 **Lectures (Server Components → couche service)**
 
-| Méthode service                             | Opération                                | Page / usage                          |
-|:--------------------------------------------|:-----------------------------------------|:--------------------------------------|
-| `articlesService.getFeedArticles(order?)`   | Articles des thèmes suivis, tri par date | `/feed`                               |
-| `articlesService.getArticleById(id)`        | Article + auteur + thème + commentaires  | `/article/[id]`                       |
-| `topicsService.getTopicsWithSubscription()` | Tous les thèmes + statut d'abonnement    | `/topics`                             |
-| `topicsService.getSubscribedTopics()`       | Thèmes suivis de l'utilisateur           | `/profile`                            |
-| `topicsService.getAllTopics()`              | Tous les thèmes (sans statut)            | menu déroulant de rédaction d'article |
+| Méthode service                             | Opération                                | Page / usage                          | Code d'erreur                          |
+|:--------------------------------------------|:-----------------------------------------|:--------------------------------------|:---------------------------------------|
+| `articlesService.getFeedArticles(order?)`   | Articles des thèmes suivis, tri par date | `/feed`                               | `401`                                  |
+| `articlesService.getArticleById(id)`        | Article + auteur + thème + commentaires  | `/article/[id]`                       | `404` (`notFound()` si absent/invalide) |
+| `topicsService.getTopicsWithSubscription()` | Tous les thèmes + statut d'abonnement    | `/topics`                             | `401`                                  |
+| `usersService.getCurrentUser()`             | Utilisateur connecté (pré-remplit le formulaire de profil) | `/profile`          | `401`                                  |
+| `topicsService.getSubscribedTopics()`       | Thèmes suivis de l'utilisateur           | `/profile`                            | `401`                                  |
+| `topicsService.getAllTopics()`              | Tous les thèmes (sans statut)            | menu déroulant de rédaction d'article | —                                      |
 
-*Reste à implémenter : la lecture du profil de l'utilisateur connecté (`getUserProfile` du périmètre initial), pour la
-page `/profile` ; l'identité provient déjà de la session via `getCurrentUserId`.*
+*La lecture du profil de l'utilisateur connecté (le `getUserProfile` du périmètre initial) est assurée par
+`usersService.getCurrentUser()` : l'identité provient de la session via `getCurrentUserId`, et la page `/profile` n'expose
+au client que `username` et `email` (le hash du mot de passe, présent sur l'entité, ne franchit jamais la frontière serveur).*
 
 Le diagramme entité-association ci-dessous représente les modèles Prisma et leurs relations.
 
@@ -442,6 +446,10 @@ ont permis d'atteindre **10/10** sur toutes les pages
   de fermeture explicite et clairement atteignable au clavier.
 * **Champs sans labels** : la maquette ne prévoyait pas de labels sur les champs
   de rédaction des articles et commentaires.
+* **Contraste insuffisant sur l'état « Déjà abonné »** : le bouton grisé d'un
+  thème déjà suivi appliquait le gris à **70 % d'opacité** (`bg-muted-foreground/70`),
+  ce qui ramenait le contraste du libellé clair sur ce fond sous le seuil WCAG
+  *1.4.3 (Contrast Minimum)* — alerte *contrast* relevée par WAVE.
 
 #### Actions correctives appliquées
 
@@ -465,6 +473,9 @@ ont permis d'atteindre **10/10** sur toutes les pages
 * **Labels de formulaire** : les champs du formulaire de rédaction d'article
   (thème, titre, contenu) reçoivent un `<label>` relié par `htmlFor`/`id`, en
   complément du placeholder, supprimant l'alerte *missing form label* de WAVE.
+* **Contraste de l'état « Déjà abonné »** : l'opacité de 70 % est retirée
+  (`bg-muted-foreground` plein), ce qui ramène le ratio de contraste au-dessus du
+  seuil WCAG et lève l'alerte WAVE.
 
 ---
 
@@ -573,7 +584,7 @@ principales.
 |:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Mise en place de la documentation (sommaire cliquable, ancres PDF-compatibles, fichiers de suivi)                                                                                                                                                  | Claude                | Documentation navigable et traçabilité du projet                                                                                                 | Ouverture de `DOCUMENTATION.md` sur GitHub, test de chaque lien du sommaire et relecture du contenu généré                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Revue critique du tableau des choix techniques (complétude, justifications, ordre, coquilles)                                                                                                                                                      | Claude                | Crédibiliser la section « Choix techniques »                                                                                                     | Validation point par point des remarques, arbitrage des reformulations conservées et relecture du tableau final                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Génération des diagrammes ERD et d'archtecture                                                                                                                                                                                                     | Claude                | Réalisation de diagrammes compatibles avec mon IDE et Github dans la documentation                                                               | Validation de la suggestion du format mermaid, vérification de la cohérence et lisibilité des diagrammes                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Génération des diagrammes ERD (Entity Relationship Diagram) et d'archtecture                                                                                                                                                                       | Claude                | Réalisation de diagrammes compatibles avec mon IDE et Github dans la documentation                                                               | Validation de la suggestion du format mermaid, vérification de la cohérence et lisibilité des diagrammes                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Rédaction des données de démonstration du seed (6 utilisateurs, 63 articles de 3 paragraphes, 3 commentaires par article)                                                                                                                          | Claude                | Disposer d'un jeu de données réaliste pour développer et tester le fil et le détail d'un article                                                 | Vérification des champs face à `schema.prisma`, contrôle de l'idempotence (upsert users + purge/recréation articles et commentaires), respect de la règle « commentaires postés par des non-auteurs distincts », conformité du mot de passe de dev à la politique du brief et relecture du contenu rédigé                                                                                                                                                                                                         |
 | Intégration des pages connectées sur la couche métier : `/topics`, `/profile`, `/feed` puis détail d'article `/article/[id]` (lecture + formulaire de commentaire) et primitives associées (`AccountForm`, `ArticleCard`, `TopicCard`, `Textarea`) | Claude                | Brancher le front sur les services et Server Actions déjà en place                                                                               | Relecture du flux `getArticleById` → rendu → `commentAction.bind()`, confrontation à la maquette, contrôle du `notFound()` sur id invalide/article absent et de l'ordre des arguments liés `(articleId, prev, formData)`, cohérence des lectures avec le tableau des server actions                                                                                                                                                                                                                               |
 | Mise en place de la suite de tests Vitest (unitaires + intégration) sur la couche serveur                                                                                                                                                          | Claude                | Tester la logique métier et atteindre le seuil de couverture de 75 %                                                                             | Exécution de `npm run test:coverage` (75 tests au vert, ~99 % stmts / 81 % branches) et `tsc --noEmit` sans erreur ; relecture des assertions face au comportement attendu (codes 401/404/409, mot de passe haché jamais en clair, identité issue de la session, double abonnement sans doublon) ; vérification que les tests d'intégration ciblent bien le conteneur Postgres et non le `.env` local                                                                                                             |
